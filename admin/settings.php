@@ -41,7 +41,7 @@ function scripted_settings_menu() {
     if($ID != '' and $accessToken !='') {
 	$createAJobPage = add_submenu_page( 'scripted_settings_menu', 'Create a Job', 'Create a Job', 'manage_options', 'scripted_create_a_job', 'scripted_create_a_job_callback' ); 
         add_action( 'admin_footer-'. $createAJobPage, 'getFormFields' );
-        $currentJobPage = add_submenu_page( 'scripted_settings_menu', 'Current Jobs', 'Jobs', 'manage_options', 'scripted_create_current_jobs', 'scripted_create_current_jobs_callback' );
+        $currentJobPage = add_submenu_page( 'scripted_settings_menu', 'Current Jobs', 'Jobs', 'manage_options', 'scripted_current_jobs', 'scripted_create_current_jobs_callback' );
         
         // javascript functions
         add_action( 'admin_footer-'. $currentJobPage, 'createProjectAjax' );

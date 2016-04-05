@@ -13,8 +13,11 @@ function scripted_create_current_jobs_callback()
     $out = '<div class="wrap">
             <div class="icon32" style="width:100px;padding-top:5px;" id="icon-scripted"><img src="'.SCRIPTED_LOGO.'"></div><h2>Current Jobs <a class="add-new-h2" href="admin.php?page=scripted_create_a_job">Create a Job</a></h2>';
     
+    $filter = (!isset($_GET['filter'])) ? 'all' : sanitize_text_field($_GET['filter']);
+    $jobUrl = ($filter !='all') ? 'jobs/'.$filter : 'jobs/';
+    
     if($validate) {
-        $url = ($paged != '') ? 'jobs?next_cursor='.$paged : 'jobs/';
+        $url = ($paged != '') ? $jobUrl.'?next_cursor='.$paged : $jobUrl;
         $result = curlRequest($url);
         
         $allJobs = $result->data; 
@@ -32,6 +35,13 @@ function scripted_create_current_jobs_callback()
              $pageOne = ' one-page';     
          
          $paggination .='<div class="tablenav">
+             <div class="alignleft actions bulkactions">
+                <select class="filter-jobs" name="action">
+                    <option '.selected('all',$filter,false).' value="all">All</option>
+                    <option '.selected('accepted',$filter,false).' value="accepted">Accepted</option>
+                    <option '.selected('finished',$filter,false).' value="finished">Finished</option>
+                </select>
+            </div>
             <div class="tablenav-pages'.$pageOne.'">';
          
                 $paggination .='';
@@ -41,7 +51,7 @@ function scripted_create_current_jobs_callback()
                 
                 $paggination .='<span class="pagination-links"> 
                             <span class="displaying-num">'.$totalProjects.' items</span>
-                            <a href="admin.php?page=scripted_create_current_jobs&paged='.$next.'" title="Go to the next page" class="next-page '.$nextPage.'">&rsaquo;</a>';
+                            <a href="admin.php?page=scripted_current_jobs&paged='.$next.'&filter='.$filter.'" title="Go to the next page" class="next-page '.$nextPage.'">&rsaquo;</a>';
          
                    $paggination .='</span>
              </div>
@@ -133,7 +143,7 @@ function createScriptedProject($proId,$ID,$accessToken,$type = 'draft')
         $post['post_content']   = $content;
         $post['post_content']  .= '<p style="font-style:italic; font-size: 10px;">Powered by <a href="https://app.scripted.com" alt="Scripted.com content marketing automation">Scripted.com</a></p>';
         $post_id                = wp_insert_post($post ,true); // draft created
-        echo $success_message;
+        echo $post_id;
         $track_url = 'http://toofr.com/api/track?url='.urlencode(get_permalink($post_id)).'&title='.urlencode($post['post_title']);
         @file_get_contents($track_url);
     } else {
@@ -165,10 +175,13 @@ function createProjectAjax()
                             jQuery("#accept_"+proId).html(data); 
                        else if(actions == 'Reject')
                             jQuery("#reject_"+proId).html(data); 
-                       else if(actions == 'Create')
-                            jQuery("#create_"+proId).html(data); 
-                       else if(actions == 'Post')
-                            jQuery("#post_"+proId).html(data); 
+                       else if(actions == 'Create') {
+                            jQuery("#create_"+proId).html('Create Draft'); 
+                            window.open('<?php echo admin_url('post.php?action=edit') ?>&post='+data);                            
+                       } else if(actions == 'Post') {
+                           jQuery("#post_"+proId).html('Create Post'); 
+                            window.open('<?php echo admin_url('post.php?action=edit') ?>&post='+data);                            
+                        }
                     }
                 });
        }
@@ -182,6 +195,12 @@ function createProjectAjax()
        function completeActionRefresh() {
            window.location.reload();
        }
+       jQuery( document ).ready(function() {
+        jQuery('.filter-jobs').change(function() {
+            var filter = jQuery(this).val();
+            document.location.href = '<?php echo admin_url('admin.php?page=scripted_current_jobs');?>&filter='+filter
+        });
+       });
     </script>
         <?php
 }
