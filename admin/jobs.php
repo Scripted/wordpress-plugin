@@ -11,7 +11,7 @@ function scripted_create_current_jobs_callback()
     $per_page         = 15;    
     $validate = validateApiKey($ID,$accessToken);    
     $out = '<div class="wrap">
-            <div class="icon32" style="width:100px;padding-top:5px;" id="icon-scripted"><img src="'.SCRIPTED_LOGO.'"></div><h2>Current Jobs <a class="add-new-h2" href="admin.php?page=scripted_create_a_job">Create a Job</a></h2>';
+            <div class="icon32" style="width:100px;padding-top:5px;" id="icon-scripted"><img src="'.SCRIPTED_LOGO.'"></div><h2>Jobs</h2>';
     
     $filter = (!isset($_GET['filter'])) ? 'all' : sanitize_text_field($_GET['filter']);
     $jobUrl = ($filter !='all') ? 'jobs/'.$filter : 'jobs/';
@@ -19,7 +19,6 @@ function scripted_create_current_jobs_callback()
     if($validate) {
         $url = ($paged != '') ? $jobUrl.'?next_cursor='.$paged : $jobUrl;
         $result = curlRequest($url);
-        
         $allJobs = $result->data; 
         
         $next = (isset($result->paging->has_next) and $result->paging->has_next == 1) ? $result->paging->next_cursor : '';
@@ -37,9 +36,16 @@ function scripted_create_current_jobs_callback()
          $paggination .='<div class="tablenav">
              <div class="alignleft actions bulkactions">
                 <select class="filter-jobs" name="action">
-                    <option '.selected('all',$filter,false).' value="all">All</option>
+                    <option '.selected('all',$filter,false).' value="">All</option>
                     <option '.selected('accepted',$filter,false).' value="accepted">Accepted</option>
                     <option '.selected('finished',$filter,false).' value="finished">Finished</option>
+					<option '.selected('screening',$filter,false).' value="screening">Screening</option>
+					<option '.selected('writing',$filter,false).' value="writing">Writing</option>
+					<option '.selected('draft_ready',$filter,false).' value="draft_ready">Draft Ready</option>
+					<option '.selected('revising',$filter,false).' value="revising">Revising</option>
+					<option '.selected('final_ready',$filter,false).' value="final_ready">Final Ready</option>
+					<option '.selected('in_progress',$filter,false).' value="in_progress">In Progress</option>
+					<option '.selected('needs_review',$filter,false).' value="needs_review">Needs Review</option>
                 </select>
             </div>
             <div class="tablenav-pages'.$pageOne.'">';
@@ -64,8 +70,7 @@ function scripted_create_current_jobs_callback()
         $out .='<table cellspacing="0" class="wp-list-table widefat sTable">
                     <thead>
                         <tr>
-                        <th scope="col" width="40%"><span>Topic</span></th>
-                        <th scope="col" width="10%"><span>Quantity</span></th>
+                        <th scope="col" width="50%"><span>Topic</span></th>
                         <th scope="col" width="10%"><span>State</span></th>
                         <th scope="col" width="15%"><span>Deadline</span></th>
                         <th scope="col" width="23%"></th>
@@ -79,18 +84,11 @@ function scripted_create_current_jobs_callback()
                 $out .='<tr valign="top" class="scripted type-page status-publish hentry alternate">
                     <input type="hidden" id="project_'.$i.'" value="'.$job->id.'">
                     <td>'.$job->topic.'</td>
-                    <td>'.$job->quantity.'</td>
                     <td>'.ucfirst($job->state).'</td>
                     <td>'.date('F j', strtotime($job->deadline_at)).'</td>';
                 
                     $out .='<td>';
-                    if($job->state == 'ready for review') {
-                        $out .= '<a id="accept_'.$job->id.'"  href="javascript:void(0)" onclick="finishedProjectActions(\''.$job->id.'\',\'Accept\')">Accept</a> | ';
-                        $out .= '<a id="request_'.$job->id.'"  href="'.admin_url('admin-ajax.php').'?action=scripted_poject_finished&do=request_edit&project_id='.$job->id.'&secure='.wp_create_nonce('request_edit').'&amp;type=page&amp;TB_iframe=1&amp;width=600&amp;height=400" class="thickbox" title="'.strip_tags(substr($job->topic,0,50)).'">Request Edits</a>';
-                    }elseif($job->state == 'ready for acceptance') {
-                        $out .= '<a id="accept_'.$job->id.'"  href="javascript:void(0)" onclick="finishedProjectActions(\''.$job->id.'\',\'Accept\')">Accept</a> | ';
-                        $out .= '<a id="reject_'.$job->id.'"  href="javascript:void(0)" onclick="finishedProjectActions(\''.$job->id.'\',\'Reject\')">Reject</a>';
-                    }elseif ($job->state == 'accepted') {
+                    if ($job->state == 'accepted') {
                         $out .= '<a id="create_'.$job->id.'" href="javascript:void(0)"  onclick="finishedProjectActions(\''.$job->id.'\',\'Create\')">Create Draft</a> | ';
                         $out .= '<a id="post_'.$job->id.'" href="javascript:void(0)"  onclick="finishedProjectActions(\''.$job->id.'\',\'Post\')">Create Post</a> | ';
                         $out .= '<a href="'.admin_url('admin-ajax.php').'?action=scripted_poject_finished&do=view_project&project_id='.$job->id.'&secure='.wp_create_nonce('view_project').'&amp;type=page&amp;TB_iframe=1&amp;width=850&amp;height=500" class="thickbox" title="'.strip_tags(substr($job->topic,0,50)).'">View</a>';
@@ -102,7 +100,7 @@ function scripted_create_current_jobs_callback()
             
         } else {
             $out .='<tr valign="top">
-                    <th colspan="5"  style="text-align:center;" class="check-column"><strong>Your Scripted account has no Current Jobs. <a href="admin.php?page=scripted_create_a_job">Create a Job</a></strong></td>
+                    <th colspan="5"  style="text-align:center;" class="check-column"><strong>Your Scripted account has no jobs... yet!</strong></td>
                     </tr>';
         }
         
@@ -130,22 +128,20 @@ function createScriptedProject($proId,$ID,$accessToken,$type = 'draft')
         if(is_array($content)) {
             $content = $content[0];
         }
-        $success_message = 'Draft Created!';
+        $success_message = 'Your draft was created!';
         $post['post_title']     = wp_strip_all_tags($_projectJob->topic);
         if($type == 'draft')
             $post['post_status']    = 'draft';
         elseif($type == 'publish') {
             $post['post_status']    = 'publish';
-            $success_message = 'Post Published!';
+            $success_message = 'Your post was published!';
         }
         $post['post_author']    = $userID;
         $post['post_type']      = 'post';
         $post['post_content']   = $content;
-        $post['post_content']  .= '<p style="font-style:italic; font-size: 10px;">Powered by <a href="https://app.scripted.com" alt="Scripted.com content marketing automation">Scripted.com</a></p>';
+        $post['post_content']  .= '<p style="font-style:italic; font-size: 10px;">Powered by <a href="https://www.scripted.com" alt="Scripted.com content marketing automation">Scripted.com</a></p>';
         $post_id                = wp_insert_post($post ,true); // draft created
         echo $post_id;
-        $track_url = 'http://toofr.com/api/track?url='.urlencode(get_permalink($post_id)).'&title='.urlencode($post['post_title']);
-        @file_get_contents($track_url);
     } else {
         echo 'Failed';
     }
@@ -188,9 +184,9 @@ function createProjectAjax()
        function doSorting() {
            var sortDo =  jQuery("#actions").val(); 
            if(sortDo == '')
-                document.location.href='<?php echo admin_url();?>/admin.php?page=scripted_create_finished_jobs<?php echo (isset($_GET['paged']) and $_GET['paged'] !='') ? '&paged'.$_GET['paged'] : ''?>';
+                document.location.href='<?php echo admin_url();?>/admin.php?page=scripted_create_jobs<?php echo (isset($_GET['paged']) and $_GET['paged'] !='') ? '&paged'.$_GET['paged'] : ''?>';
            else
-               document.location.href='<?php echo admin_url();?>/admin.php?page=scripted_create_finished_jobs<?php echo (isset($_GET['paged']) and $_GET['paged'] !='') ? '&paged='.$_GET['paged'] : ''?>&sort='+sortDo;
+               document.location.href='<?php echo admin_url();?>/admin.php?page=scripted_create_jobs<?php echo (isset($_GET['paged']) and $_GET['paged'] !='') ? '&paged='.$_GET['paged'] : ''?>&sort='+sortDo;
        }
        function completeActionRefresh() {
            window.location.reload();
@@ -198,7 +194,7 @@ function createProjectAjax()
        jQuery( document ).ready(function() {
         jQuery('.filter-jobs').change(function() {
             var filter = jQuery(this).val();
-            document.location.href = '<?php echo admin_url('admin.php?page=scripted_current_jobs');?>&filter='+filter
+            document.location.href = '<?php echo admin_url('admin.php?page=scripted_jobs');?>&filter='+filter
         });
        });
     </script>
@@ -244,43 +240,6 @@ function scriptedPojectFinished() {
         createScriptedProject($project_id,$ID,$accessToken);
     }elseif(wp_verify_nonce($_GET['_wpnonce'],'create_reject_accept') and $do == 'Post') {
         createScriptedProject($project_id,$ID,$accessToken,'publish');
-    }elseif(wp_verify_nonce($_GET['secure'],'request_edit') and $do == 'request_edit') {
-        
-        if(empty($_POST))
-            getFormRequestEditProject($project_id);
-        else {
-            $chief_complaint = $_POST['chief_complaint'];
-            $_projectAction = curlRequest('jobs/'.$project_id.'/request_edits',true,'feedback='.$chief_complaint); 
-            
-            if($_projectAction)
-                echo 'Accepted';
-            else
-                echo 'Failed';
-            
-            echo '<script type="text/javascript">';
-            echo 'window.top.completeActionRefresh();';
-            echo '</script>';
-        }
     }
     die();
-}
-function getFormRequestEditProject() {
-    
-    $out ='<form action="" method="post" name="frmEditRequests" id="frmEditRequests" onsubmit="return sendEditRequest();">'.wp_nonce_field( 'edit_requests', '_wpnonce' );
-    $out .= '<label for="chief_complaint">Chief Complaint</label></br></br>';
-    $out .= '<textarea id="chief_complaint" name="chief_complaint" style="width:400px; height:200px;"></textarea></br>';
-    $out .='<input type="submit" value="Request Edits" class="button-primary" name="submit">';
-    $out .='</form>';
-    $out .='<script>';
-    $out .='function sendEditRequest() {
-                var chief_complaint = document.getElementById("chief_complaint").value;
-                if(chief_complaint == "") {
-                    document.getElementById("chief_complaint").style.border="1px solid red";
-                    return false;
-                }                
-                return true;
-            }
-        ';
-    $out .='</script>';
-    echo $out;
 }

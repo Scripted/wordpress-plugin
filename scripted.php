@@ -1,10 +1,10 @@
 <?php
 /*
-Plugin Name: Scripted API
+Plugin Name: Scripted.com Writing Marketplace
 Plugin URI: https://Scripted.com/
-Description: Manage your Scripted account from WordPress!
+Description: Get great writers and manage your Scripted account from WordPress!
 Author: Scripted.com
-Version: 1.6
+Version: 1.9
 Author URI: https://Scripted.com/
 */
 
@@ -26,9 +26,7 @@ class WP_Scripted {
             
             
             require_once( SCRIPTED_FILE_PATH . '/admin/settings.php' );
-            require_once( SCRIPTED_FILE_PATH . '/admin/create_job.php' );
-            require_once( SCRIPTED_FILE_PATH . '/admin/current_jobs.php' );
-            //require_once( SCRIPTED_FILE_PATH . '/admin/finished_jobs.php' );
+            require_once( SCRIPTED_FILE_PATH . '/admin/jobs.php' );
              
 	}
 	function scripteActivePlugin() {
@@ -41,6 +39,7 @@ class WP_Scripted {
         }
 	public function scripted_deactivePlugin() {
 		 delete_option( '_scripted_api_key' ); 
+		 delete_option( '_scripted_business_id' ); 
 	}
 }
 
