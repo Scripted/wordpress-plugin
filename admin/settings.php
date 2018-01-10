@@ -59,7 +59,6 @@ function scripted_settings_menu_function() {
         if($validate) {
             update_option( '_scripted_ID', sanitize_text_field($_POST['ID_text']) );        
             update_option( '_scripted_auccess_tokent', sanitize_text_field($_POST['success_tokent_text'] ));        
-            update_option( '_powered_scripted', sanitize_text_field($_POST['powered_scripted'] ));        
         } else {
             echo '<div class="updated" id="message"><p>Sorry, we found an error. Please confirm your Organization Key and Access Token are correct and try again.</p></div>';
         }
@@ -69,13 +68,12 @@ function scripted_settings_menu_function() {
    
    $out .='<p>Authentication is required to use your Scripted WordPress plugin.</p>';
    
-   $out .='<p>To get your Organization Key and Access Token, please register or log in at Scripted.com and then <a href="https://dashboard.scripted.com/business/account/api" target="_blank">click here</a>. Your private authentication credentials will be available there. Copy and paste them into the settings below!</p>';
+   $out .='<p>To get your Organization Key and Access Token, please register or log in at Scripted.com and then <a href="https://www.scripted.com/business/account/api" target="_blank">click here</a>. Your private authentication credentials will be available there. Copy and paste them into the settings below!</p>';
             
    $out .='<form action="" method="post" name="scripted_settings">'.wp_nonce_field( 'scriptedFormAuthSettings', '_wpnonce' );
    
    $ID               = get_option( '_scripted_ID' );
    $accessToken      = get_option( '_scripted_auccess_tokent' );
-   $powered          = get_option( '_powered_scripted' );
    
    $out .='<table class="form-table">
       <tbody>
@@ -86,10 +84,6 @@ function scripted_settings_menu_function() {
         <tr valign="top">
           <th scope="row"><label for="acceess_tokent_text">Access Token</label></th>
           <td><input type="text" class="regular-text" value="'.$accessToken.'" name="success_tokent_text"></td>
-        </tr>
-        <tr valign="top">
-          <th scope="row"><label for="powered_scripted">Include "Powered by Scripted.com" on your posts?</label></th>
-          <td><input type="checkbox"  value="1" name="powered_scripted" '.checked(1,$powered).'></td>
         </tr>
      </tbody>
     </table>

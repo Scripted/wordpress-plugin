@@ -139,7 +139,6 @@ function createScriptedProject($proId,$ID,$accessToken,$type = 'draft')
         $post['post_author']    = $userID;
         $post['post_type']      = 'post';
         $post['post_content']   = $content;
-        $post['post_content']  .= '<p style="font-style:italic; font-size: 10px;">Powered by <a href="https://www.scripted.com" alt="Scripted.com content marketing automation">Scripted.com</a></p>';
         $post_id                = wp_insert_post($post ,true); // draft created
         echo $post_id;
     } else {
