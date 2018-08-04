@@ -58,9 +58,13 @@ function scripted_settings_menu_function() {
         $validate = validateApiKey($_POST['ID_text'],$_POST['success_tokent_text']);
         if($validate) {
             update_option( '_scripted_ID', sanitize_text_field($_POST['ID_text']) );        
-            update_option( '_scripted_auccess_tokent', sanitize_text_field($_POST['success_tokent_text'] ));
-            echo '<div class="notice notice-success" id="message"><p>Great! Your code validation is correct. Thanks, enjoy...</p></div>';
-        } else {
+            update_option( '_scripted_auccess_tokent', sanitize_text_field($_POST['success_tokent_text'] )); ?>
+            
+            <script type="text/javascript">
+                window.location = '<?php echo admin_url('/admin.php?page=scripted_jobs&auth=true') ?>';
+            </script>
+            
+        <?php } else {
             echo '<div class="notice notice-error" id="message"><p>Sorry, we found an error. Please confirm your Organization Key and Access Token are correct and try again.</p></div>';
         }
     }

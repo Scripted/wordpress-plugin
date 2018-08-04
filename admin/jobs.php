@@ -10,8 +10,12 @@ function scripted_create_current_jobs_callback()
     $paged            = (isset($_GET['paged']) and $_GET['paged'] !='') ? sanitize_text_field($_GET['paged']) : '';
     $per_page         = 15;    
     $validate = validateApiKey($ID,$accessToken);    
-    $out = '<div class="wrap">
-            <div class="icon32" style="width:100px;padding-top:5px;" id="icon-scripted"><img src="'.SCRIPTED_LOGO.'"></div><h2>Jobs</h2>';
+    $out = '<div class="wrap">';
+    
+    if ( $_GET['auth'] )
+        $out .= '<div class="notice notice-success" id="message"><p>Great! Your code validation is correct. Thanks, enjoy...</p></div>';
+
+    $out .= '<div class="icon32" style="width:100px;padding-top:5px;" id="icon-scripted"><img src="'.SCRIPTED_LOGO.'"></div><h2>Jobs</h2>';
     
     $filter = (!isset($_GET['filter'])) ? 'all' : sanitize_text_field($_GET['filter']);
     $jobUrl = ($filter !='all') ? 'jobs/'.$filter : 'jobs/';
