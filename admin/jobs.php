@@ -8,14 +8,18 @@ function scripted_create_current_jobs_callback()
     $ID               = get_option( '_scripted_ID' );
     $accessToken      = get_option( '_scripted_auccess_tokent' );
     $paged            = (isset($_GET['paged']) and $_GET['paged'] !='') ? sanitize_text_field($_GET['paged']) : '';
-    $per_page         = 15;    
-    $validate = validateApiKey($ID,$accessToken);    
-    $out = '<div class="wrap">
-            <div class="icon32" style="width:100px;padding-top:5px;" id="icon-scripted"><img src="'.SCRIPTED_LOGO.'"></div><h2>Jobs</h2>';
+    $per_page         = 15;
+    $validate         = validateApiKey($ID,$accessToken);    
+    $out              = '<div class="wrap">';
+    
+    if ( $_GET['auth'] )
+        $out .= '<div class="notice notice-success" id="message"><p>Great! Your code validation is correct. Thanks, enjoy...</p></div>';
+
+    $out .= '<div class="icon32" style="width:100px;padding-top:5px;" id="icon-scripted"><img src="'.SCRIPTED_LOGO.'"></div><h2>Jobs</h2>';
     
     $filter = (!isset($_GET['filter'])) ? 'all' : sanitize_text_field($_GET['filter']);
     $jobUrl = ($filter !='all') ? 'jobs/'.$filter : 'jobs/';
-    
+
     if($validate) {
         $url = ($paged != '') ? $jobUrl.'?next_cursor='.$paged : $jobUrl;
         $result = curlRequest($url);
@@ -57,7 +61,7 @@ function scripted_create_current_jobs_callback()
                 
                 $paggination .='<span class="pagination-links"> 
                             <span class="displaying-num">'.$totalProjects.' items</span>
-                            <a href="admin.php?page=scripted_current_jobs&paged='.$next.'&filter='.$filter.'" title="Go to the next page" class="next-page '.$nextPage.'">&rsaquo;</a>';
+                            <a href="admin.php?page=scripted_jobs&paged='.$next.'&filter='.$filter.'" title="Go to the next page" class="next-page '.$nextPage.'">&rsaquo;</a>';
          
                    $paggination .='</span>
              </div>
@@ -165,7 +169,7 @@ function createProjectAjax()
                     type: 'POST',
                     url: '<?php echo wp_nonce_url( admin_url('admin-ajax.php'), 'create_reject_accept' );?>&do='+actions+'&project_id='+proId+'&action=scripted_poject_finished',
                     data: '',
-                    success: function(data) {                            
+                    success: function(data) {    console.log(data);                        
                         if(actions == 'Accept')
                             jQuery("#accept_"+proId).html(data); 
                        else if(actions == 'Reject')
