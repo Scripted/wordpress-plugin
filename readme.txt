@@ -1,10 +1,10 @@
 === Scripted.com Writer Marketplace ===
 Contributors: rbucks
-Donate link: 
+Donate link:
 Tags: writing, blog posts, twitter, tweet, hire blogger, hire writer, custom content, scripted.com, expert writer, scripted, freelance writer
 Requires at least: 3.3
 Tested up to: 4.9.1
-Stable tag: 1.9.1
+Stable tag: 2.2.0
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -20,7 +20,7 @@ Founded in 2011, Scripted.com is a leading marketplace for original, high-qualit
 2. Activate the plugin through the 'Plugins' menu in WordPress.
 3. Create an account at Scripted.com by going here: https://www.scripted.com/business/register
 4. View and copy your organization key and access token here: https://www.scripted.com/business/account/api
-5. Go to your Scripted settings (see screenshot) and enter it in the Scripted settings page. 
+5. Go to your Scripted settings (see screenshot) and enter it in the Scripted settings page.
 
 == Frequently asked questions ==
 
