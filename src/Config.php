@@ -175,25 +175,40 @@ class Config
      * Attempts to find all post ids that are associated with a given scripted
      * project id.
      *
-     * @param  string $projectId
+     * @param  string|array $projectIds
      *
      * @return array
      */
-    public static function getPostIdsByProjectId($projectId)
+    public static function getPostIdsByProjectIds($projectIds)
     {
         global $wpdb;
 
+        if (!is_array($projectIds)) {
+            $projectIds = [$projectIds];
+        }
+
+        $projectIdCsv = implode(',', array_map(function ($projectId) {
+            return "'$projectId'";
+        }, $projectIds));
+
         $query = [];
-        $query[] = "select post_id from $wpdb->postmeta";
+        $query[] = "select post_id, meta_value from $wpdb->postmeta";
         $query[] = "where meta_key = '".JobsPage::PROJECT_ID_META_KEY."'";
         $query[] = "and";
-        $query[] = "meta_value = '$projectId'";
+        $query[] = "meta_value in($projectIdCsv)";
 
-        $postIds = array_map(function ($result) {
-            return $result['post_id'];
-        }, $wpdb->get_results(implode(' ', $query), ARRAY_A));
+        $sql = implode(' ', $query);
 
-        sort($postIds);
+        static::log($sql);
+
+        $postIds = [];
+
+        array_walk($wpdb->get_results($sql, ARRAY_A), function ($result) use (&$postIds) {
+            if (!isset($postIds[$result['meta_value']])) {
+                $postIds[$result['meta_value']] = [];
+            }
+            array_push($postIds[$result['meta_value']], $result['post_id']);
+        });
 
         return $postIds;
     }

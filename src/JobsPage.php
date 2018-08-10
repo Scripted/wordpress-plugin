@@ -110,8 +110,6 @@ class JobsPage
             $totalProjects  = $result->total_count;
             $totalPages     = ceil($totalProjects/$perPage);
 
-            // pagination
-
             $pagination = '';
 
             $pageOne = '';
@@ -119,7 +117,7 @@ class JobsPage
                 $pageOne = ' one-page';
             }
 
-             $pagination .='<div class="tablenav">
+            $pagination .='<div class="tablenav">
                  <div class="alignleft actions bulkactions">
                     <select class="filter-jobs" name="action">
                         <option '.selected('all',$filter,false).' value="">All</option>
@@ -165,6 +163,10 @@ class JobsPage
                           <tbody>';
 
             if ($allJobs)  {
+                $projectIds = array_map(function ($project) {
+                    return $project->id;
+                }, $allJobs);
+                $postIds = Config::getPostIdsByProjectIds($projectIds);
                 $i = 1;
                 foreach($allJobs as $job) {
                     $out[] ='<tr valign="top" class="scripted type-page status-publish hentry alternate">
@@ -176,8 +178,13 @@ class JobsPage
                         $out[] ='<td>';
                         if ($job->state == 'accepted') {
                             $previewAjaxUrl = wp_nonce_url(admin_url('admin-ajax.php'), static::AJAX_FINISHED_JOB_PREVIEW ).'&action='.static::AJAX_FINISHED_JOB_PREVIEW.'&projectId='.$job->id;
-                            $out[] = '<a id="create_'.$job->id.'" href="javascript:void(0);" onclick="Scripted.createProjectPost(\''.$job->id.'\', false, this)">Create Draft</a> |&nbsp';
-                            $out[] = '<a id="post_'.$job->id.'" href="javascript:void(0);" onclick="Scripted.createProjectPost(\''.$job->id.'\', true, this)">Create Post</a> |&nbsp;';
+                            if (isset($postIds[$job->id])) {
+                                $editUrl = wp_nonce_url(admin_url('post.php'), 'edit' ).'&action=edit&post='.array_shift($postIds[$job->id]);
+                                $out[] = '<a id="edit_'.$job->id.'" href="'.$editUrl.'">Edit Post</a> |&nbsp';
+                            } else {
+                                $out[] = '<a id="create_'.$job->id.'" href="javascript:void(0);" onclick="Scripted.createProjectPost(\''.$job->id.'\', false, this)">Create Draft</a> |&nbsp';
+                                $out[] = '<a id="post_'.$job->id.'" href="javascript:void(0);" onclick="Scripted.createProjectPost(\''.$job->id.'\', true, this)">Create Post</a> |&nbsp;';
+                            }
                             $out[] = '<a href="'.$previewAjaxUrl.'&'.urlencode('TB_iframe=1&width=850&height=500').'" class="thickbox" title="'.strip_tags(substr($job->topic,0,50)).'">Preview</a>';
                         }
                         $out[] ='</td>';
@@ -278,11 +285,11 @@ class JobsPage
                 $content = $content[0];
             }
 
-            $postIds = Config::getPostIdsByProjectId($projectId);
+            $postIds = Config::getPostIdsByProjectIds([$projectId]);
 
             $post = [];
-            if (!empty($postIds)) {
-                $result = get_post(array_shift($postIds));
+            if (isset($postIds[$projectId]) && !empty($postIds[$projectId])) {
+                $result = get_post(array_shift($postIds[$projectId]));
                 if (is_array($result)) {
                     $result = array_shift($result);
                 }

@@ -87,7 +87,7 @@ class SettingsPage
           </tr>
           <tr valign="top">
           <th scope="row"><label for="'.static::ACCESS_TOKEN_INPUT_NAME.'">Access Token</label></th>
-          <td><input type="text" class="regular-text" value="'.$accessToken.'" name="'.static::ACCESS_TOKEN_INPUT_NAME.'"></td>
+          <td><textarea rows="5" class="regular-text" name="'.static::ACCESS_TOKEN_INPUT_NAME.'">'.$accessToken.'</textarea></td>
           </tr>
           </tbody>
           </table>
