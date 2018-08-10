@@ -1,5 +1,5 @@
 === Scripted.com Writer Marketplace ===
-Contributors: rbucks
+Contributors: stevenmaguire
 Donate link:
 Tags: writing, blog posts, twitter, tweet, hire blogger, hire writer, custom content, scripted.com, expert writer, scripted, freelance writer
 Requires at least: 3.3
