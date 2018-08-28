@@ -38,6 +38,13 @@ class Config
     public const BUSINESS_ID_KEY = '_scripted_business_id';
 
     /**
+     * WordPress cache group key used to isolate cache keys used by this plugin.
+     *
+     * @var string
+     */
+    public const CACHE_GROUP = '_scripted_';
+
+    /**
      * List of old keys from previous versions of the plugin.
      *
      * @var array
@@ -63,11 +70,11 @@ class Config
      */
     public static function activatePlugin()
     {
-        if (!get_option(static::ACCESS_TOKEN_KEY)) {
-            add_option(static::ACCESS_TOKEN_KEY, '', '', 'no');
+        if (!WordPressApi::getOption(static::ACCESS_TOKEN_KEY)) {
+            WordPressApi::addOption(static::ACCESS_TOKEN_KEY, '', '', 'no');
         }
-        if (!get_option(static::BUSINESS_ID_KEY)) {
-            add_option(static::BUSINESS_ID_KEY, '', '', 'no');
+        if (!WordPressApi::getOption(static::BUSINESS_ID_KEY)) {
+            WordPressApi::addOption(static::BUSINESS_ID_KEY, '', '', 'no');
         }
     }
 
@@ -80,7 +87,7 @@ class Config
     {
         // Let's cleanup some old options keys.
         array_map(function ($legacyKey) {
-            delete_option($legacyKey);
+            WordPressApi::removeOption($legacyKey);
         }, static::$legacyOptionKeys);
     }
 
@@ -91,8 +98,8 @@ class Config
      */
     public static function deactivatePlugin()
     {
-         delete_option(static::ACCESS_TOKEN_KEY);
-         delete_option(static::BUSINESS_ID_KEY);
+         WordPressApi::removeOption(static::ACCESS_TOKEN_KEY);
+         WordPressApi::removeOption(static::BUSINESS_ID_KEY);
     }
 
     /**
@@ -102,43 +109,7 @@ class Config
      */
     public static function getAccessToken()
     {
-        return get_option(static::ACCESS_TOKEN_KEY, null);
-    }
-
-    /**
-     * Creates and returns a properly formatted wp_ajax_ action.
-     *
-     * @return string
-     */
-    public static function getAjaxAction($action)
-    {
-        return sprintf('wp_ajax_%s', (string) $action);
-    }
-
-    /**
-     * Attempts to return the current WordPress user.
-     *
-     * @return WP_User
-     */
-    public static function getCurrentUser()
-    {
-        global $current_user;
-
-        return $current_user;
-    }
-
-    /**
-     * Fetches specific key from input.
-     *
-     * @return string|null
-     */
-    public static function getInput($key)
-    {
-        if (isset($_REQUEST) && isset($_REQUEST[(string) $key])) {
-            return sanitize_text_field($_REQUEST[(string) $key]);
-        }
-
-        return null;
+        return WordPressApi::getOption(static::ACCESS_TOKEN_KEY, null);
     }
 
     /**
@@ -148,7 +119,7 @@ class Config
      */
     public static function getOrgKey()
     {
-        return get_option(static::BUSINESS_ID_KEY, null);
+        return WordPressApi::getOption(static::BUSINESS_ID_KEY, null);
     }
 
     /**
@@ -158,7 +129,7 @@ class Config
      */
     public static function getIconUrl()
     {
-        return plugins_url('assets/images/favicon.ico', dirname(__FILE__));
+        return plugins_url('assets/images/favicon-16x16.png', dirname(__FILE__));
     }
 
     /**
@@ -168,49 +139,7 @@ class Config
      */
     public static function getLogoUrl()
     {
-        return plugins_url('assets/images/logo.png', dirname(__FILE__));
-    }
-
-    /**
-     * Attempts to find all post ids that are associated with a given scripted
-     * project id.
-     *
-     * @param  string|array $projectIds
-     *
-     * @return array
-     */
-    public static function getPostIdsByProjectIds($projectIds)
-    {
-        global $wpdb;
-
-        if (!is_array($projectIds)) {
-            $projectIds = [$projectIds];
-        }
-
-        $projectIdCsv = implode(',', array_map(function ($projectId) {
-            return "'$projectId'";
-        }, $projectIds));
-
-        $query = [];
-        $query[] = "select post_id, meta_value from $wpdb->postmeta";
-        $query[] = "where meta_key = '".JobsPage::PROJECT_ID_META_KEY."'";
-        $query[] = "and";
-        $query[] = "meta_value in($projectIdCsv)";
-
-        $sql = implode(' ', $query);
-
-        static::log($sql);
-
-        $postIds = [];
-
-        array_walk($wpdb->get_results($sql, ARRAY_A), function ($result) use (&$postIds) {
-            if (!isset($postIds[$result['meta_value']])) {
-                $postIds[$result['meta_value']] = [];
-            }
-            array_push($postIds[$result['meta_value']], $result['post_id']);
-        });
-
-        return $postIds;
+        return plugins_url('assets/images/scripted-horizontal-dark.svg', dirname(__FILE__));
     }
 
     /**
@@ -242,7 +171,7 @@ class Config
      */
     public static function setAccessToken($accessToken = null)
     {
-        update_option(Config::ACCESS_TOKEN_KEY, sanitize_text_field((string) $accessToken));
+        WordPressApi::setOption(Config::ACCESS_TOKEN_KEY, sanitize_text_field((string) $accessToken));
     }
 
     /**
@@ -254,6 +183,6 @@ class Config
      */
     public static function setOrgKey($orgKey = null)
     {
-        update_option(Config::BUSINESS_ID_KEY, sanitize_text_field((string) $orgKey));
+        WordPressApi::setOption(Config::BUSINESS_ID_KEY, sanitize_text_field((string) $orgKey));
     }
 }

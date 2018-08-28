@@ -8,6 +8,13 @@ namespace Scripted;
 class Http
 {
     /**
+     * Default cache length in seconds.
+     *
+     * @var integer
+     */
+    public const DEFAULT_CACHE_LENGTH_SECONDS = 600;
+
+    /**
      * Attempts to make an HTTP request with the given parameters.
      *
      * @param  string  $type
@@ -20,11 +27,25 @@ class Http
     {
         $orgKey = Config::getOrgKey();
         $accessToken = Config::getAccessToken();
+        $url = sprintf(
+            '%s/%s/v1/%s',
+            Config::BASE_API_URL,
+            $orgKey,
+            $type
+        );
+
+        Config::log($url);
+
+        $cachedResults = WordPressApi::getCache($url);
+
+        if ($cachedResults) {
+            return $cachedResults;
+        }
 
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_HTTPHEADER, array('Authorization: Bearer '.$accessToken));
         curl_setopt($ch, CURLOPT_HEADER, 1);
-        curl_setopt($ch, CURLOPT_URL, Config::BASE_API_URL.'/'.$orgKey.'/v1/'.$type);
+        curl_setopt($ch, CURLOPT_URL, $url);
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
 
         if ((bool) $post) {
@@ -47,9 +68,10 @@ class Http
             $contents = json_decode($contents);
             if (isset($contents->data) && count($contents->data) > 0) {
                 if(isset($contents->total_count)) {
+                    WordPressApi::setCache($url, $contents, static::DEFAULT_CACHE_LENGTH_SECONDS);
                     return $contents;
                 }
-
+                WordPressApi::setCache($url, $contents->data, static::DEFAULT_CACHE_LENGTH_SECONDS);
                 return $contents->data;
             }
         }

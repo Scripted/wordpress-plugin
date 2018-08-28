@@ -2,12 +2,14 @@
 
 namespace Scripted;
 
+use stdClass;
+use WP_Post;
+
 /**
  *
  */
 class JobsPage
 {
-
     /**
      * Ajax event that triggers preview of finished job.
      *
@@ -21,6 +23,13 @@ class JobsPage
      * @var string
      */
     public const AJAX_FINISHED_JOB_PREVIEW = 'scripted_preview_finished_job';
+
+    /**
+     * Ajax event that triggers preview of finished job.
+     *
+     * @var string
+     */
+    public const AJAX_REFRESH_PROJECT_POST = 'scripted_refresh_project_post';
 
     /**
      * Meta data key used to store project id on post.
@@ -40,7 +49,7 @@ class JobsPage
     /**
      * Configures the settings page.
      *
-     * @return void
+     * @return string
      */
     public static function configure()
     {
@@ -75,6 +84,50 @@ class JobsPage
         );
     }
 
+    protected static function getProjectAsWordPressPost($projectId, $postId = null)
+    {
+        $orgKey = Config::getOrgKey();
+        $accessToken = Config::getAccessToken();
+        $currentUser = WordPressApi::getCurrentUser();
+
+        if (!$currentUser) {
+            wp_die('It does not appear that you are logged into WordPress', 401);
+        }
+
+        if (!Http::isAccessTokenValid($orgKey, $accessToken)) {
+            wp_die('Scripted.com access token is not authorized.', 401);
+        }
+
+        $projectJob = Http::curlRequest('jobs/'.$projectId);
+        $projectContent = Http::curlRequest('jobs/'.$projectId.'/html_contents');
+
+        if (!empty($projectJob) && !empty($content = $projectContent->html_contents)) {
+            if (is_array($content)) {
+                $content = array_shift($content);
+            }
+
+            $postId = $postId ?: array_shift(WordPressApi::getPostIdsByProjectIds([$projectId]));
+            $post = new WP_Post(new stdClass());
+            if ($postId) {
+                $result = get_post($postId);
+                if (is_array($result)) {
+                    $result = array_shift($result);
+                }
+                if (is_a($result, 'WP_Post')) {
+                    $post = $result;
+                }
+            }
+            $post->post_title = wp_strip_all_tags($projectJob->topic);
+            $post->post_author = $currentUser->ID;
+            $post->post_type = 'post';
+            $post = Tools\ContentFormatter::setPostContent($post, $content);
+
+            return $post;
+        }
+
+        return null;
+    }
+
     /**
      * Fetches all the jobs based on the current query, then renders a list view
      * in the WordPress admin screen.
@@ -96,7 +149,9 @@ class JobsPage
         if ( $_GET['auth'] )
             $out[] = '<div class="notice notice-success" id="message"><p>Great! Your code validation is correct. Thanks, enjoy...</p></div>';
 
-        $out[] = '<div style="width:100px;margin-top:5px;" id="icon-scripted"><img src="'.Config::getLogoUrl().'"></div><h2>Jobs</h2>';
+        $out[] = '<div style="width:150px;margin:50px 0px 30px 0px;" id="icon-scripted"><img src="'.Config::getLogoUrl().'"></div>';
+
+        $out[] = '<h2>Jobs</h2>';
 
         $filter = (!isset($_GET['filter'])) ? 'all' : sanitize_text_field($_GET['filter']);
         $jobUrl = ($filter !='all') ? 'jobs/'.$filter : 'jobs/';
@@ -108,16 +163,16 @@ class JobsPage
 
             $next = (isset($result->paging->has_next) && $result->paging->has_next == 1) ? $result->paging->next_cursor : '';
             $totalProjects  = $result->total_count;
-            $totalPages     = ceil($totalProjects/$perPage);
+            $totalPages     = ceil( $totalProjects / $perPage );
 
-            $pagination = '';
+            $pagination = [];
 
             $pageOne = '';
             if ($paged == '' && $result->paging->has_next != 1) {
                 $pageOne = ' one-page';
             }
 
-            $pagination .='<div class="tablenav">
+            $pagination[] ='<div class="tablenav">
                  <div class="alignleft actions bulkactions">
                     <select class="filter-jobs" name="action">
                         <option '.selected('all',$filter,false).' value="">All</option>
@@ -133,23 +188,21 @@ class JobsPage
                     </select>
                 </div>
                 <div class="tablenav-pages'.$pageOne.'">';
-
-                    $pagination .='';
                     $nextPage = '';
                     if($result->paging->has_next != 1)
                         $nextPage = 'disabled';
 
-                    $pagination .='<span class="pagination-links">
+                    $pagination[] ='<span class="pagination-links">
                                 <span class="displaying-num">'.$totalProjects.' items</span>
                                 <a href="admin.php?page=scripted_jobs&paged='.$next.'&filter='.$filter.'" title="Go to the next page" class="next-page '.$nextPage.'">&rsaquo;</a>';
 
-                       $pagination .='</span>
+                    $pagination[] ='</span>
                  </div>
                 <br class="clear">
                 </div>';
             // pagination end
 
-            $out[] = $pagination;
+            $out[] = implode('', array_map('trim', $pagination));
 
             $out[] ='<table cellspacing="0" class="wp-list-table widefat sTable">
                         <thead>
@@ -166,7 +219,7 @@ class JobsPage
                 $projectIds = array_map(function ($project) {
                     return $project->id;
                 }, $allJobs);
-                $postIds = Config::getPostIdsByProjectIds($projectIds);
+                $postIds = WordPressApi::getPostIdsByProjectIds($projectIds);
                 $i = 1;
                 foreach($allJobs as $job) {
                     $out[] ='<tr valign="top" class="scripted type-page status-publish hentry alternate">
@@ -179,8 +232,10 @@ class JobsPage
                         if ($job->state == 'accepted') {
                             $previewAjaxUrl = wp_nonce_url(admin_url('admin-ajax.php'), static::AJAX_FINISHED_JOB_PREVIEW ).'&action='.static::AJAX_FINISHED_JOB_PREVIEW.'&projectId='.$job->id;
                             if (isset($postIds[$job->id])) {
-                                $editUrl = wp_nonce_url(admin_url('post.php'), 'edit' ).'&action=edit&post='.array_shift($postIds[$job->id]);
+                                $postId = array_shift($postIds[$job->id]);
+                                $editUrl = wp_nonce_url(admin_url('post.php'), 'edit' ).'&action=edit&post='.$postId;
                                 $out[] = '<a id="edit_'.$job->id.'" href="'.$editUrl.'">Edit Post</a> |&nbsp';
+                                $out[] = '<a id="refresh_'.$job->id.'" href="javascript:void(0);" onclick="Scripted.refreshProjectPost(\''.$job->id.'\', \''.$postId.'\', this)">Refresh Post</a> |&nbsp';
                             } else {
                                 $out[] = '<a id="create_'.$job->id.'" href="javascript:void(0);" onclick="Scripted.createProjectPost(\''.$job->id.'\', false, this)">Create Draft</a> |&nbsp';
                                 $out[] = '<a id="post_'.$job->id.'" href="javascript:void(0);" onclick="Scripted.createProjectPost(\''.$job->id.'\', true, this)">Create Post</a> |&nbsp;';
@@ -200,9 +255,7 @@ class JobsPage
              $out[] = '</tbody>
                     </table>'; // end table
 
-           $out[] = $pagination;
-
-
+           $out[] = implode('', array_map('trim', $pagination));
         }
 
         $out[] ='</div>';// end of wrap div
@@ -237,6 +290,23 @@ class JobsPage
                             link.text(originalText + ' (Try again?)').attr('disabled', false);
                         }
                     });
+                },
+                refreshProjectPost: function (projectId, postId, caller) {
+                    var link = jQuery(caller);
+                    var originalText = link.text();
+                    jQuery.ajax({
+                        type: 'POST',
+                        url: '<?php echo wp_nonce_url( admin_url('admin-ajax.php'), static::AJAX_REFRESH_PROJECT_POST);?>&projectId='+projectId+'&postId='+postId+'&action=<?php echo static::AJAX_REFRESH_PROJECT_POST; ?>',
+                        data: '',
+                        success: function(data) {
+                            window.location = data;
+                            // console.log(data);
+                        },
+                        error: function (error) {
+                            console.error(error);
+                            // link.text(originalText + ' (Try again?)').attr('disabled', false);
+                        }
+                    });
                 }
             };
 
@@ -262,47 +332,14 @@ class JobsPage
      */
     public static function renderProjectPostEditUrl()
     {
-        $projectId = Config::getInput('projectId');
-        $isPublished = (bool) Config::getInput('isPublished');
-        $orgKey = Config::getOrgKey();
-        $accessToken = Config::getAccessToken();
-        $validate = Http::isAccessTokenValid($orgKey, $accessToken);
-        $currentUser = Config::getCurrentUser();
+        $projectId = WordPressApi::getInput('projectId');
+        $isPublished = (bool) WordPressApi::getInput('isPublished');
 
-        if (!$currentUser) {
-            wp_die('It does not appear that you are logged into WordPress', 401);
-        }
+        $post = static::getProjectAsWordPressPost($projectId);
 
-        if (!$validate) {
-            wp_die('Scripted.com access token is not authorized.', 401);
-        }
-
-        $projectJob = Http::curlRequest('jobs/'.$projectId);
-        $projectContent = Http::curlRequest('jobs/'.$projectId.'/html_contents');
-
-        if (!empty($projectJob) && !empty($content = $projectContent->html_contents)) {
-            if (is_array($content)) {
-                $content = $content[0];
-            }
-
-            $postIds = Config::getPostIdsByProjectIds([$projectId]);
-
-            $post = [];
-            if (isset($postIds[$projectId]) && !empty($postIds[$projectId])) {
-                $result = get_post(array_shift($postIds[$projectId]));
-                if (is_array($result)) {
-                    $result = array_shift($result);
-                }
-                if (is_a($result, 'WP_Post')) {
-                    $post = $result->to_array();
-                }
-            }
-            $post['post_title'] = wp_strip_all_tags($projectJob->topic);
-            $post['post_status'] = $isPublished ? 'publish' : 'draft';
-            $post['post_author'] = $currentUser->ID;
-            $post['post_type'] = 'post';
-            $post['post_content'] = $content;
-            if (isset($post['ID'])) {
+        if ($post) {
+            $post->post_status = $isPublished ? 'publish' : 'draft';
+            if ($post->ID) {
                 $postId = wp_update_post($post, true);
             } else {
                 $postId = wp_insert_post($post, true);
@@ -325,24 +362,30 @@ class JobsPage
      */
     public static function renderFinishedJobPreview()
     {
-        $projectId = Config::getInput('projectId');
-        $orgKey = Config::getOrgKey();
-        $accessToken = Config::getAccessToken();
-        $validate = Http::isAccessTokenValid($orgKey, $accessToken);
+        $projectId = WordPressApi::getInput('projectId');
 
-        if (!$validate) {
-            wp_die('Scripted.com access token is not authorized.', 401);
-        }
+        $post = static::getProjectAsWordPressPost($projectId);
 
-        $projectContent = Http::curlRequest('jobs/'.$projectId.'/html_contents');
-
-        if (!empty($content = $projectContent->html_contents)) {
-            if(is_array($content)) {
-                $content = $content[0];
-            }
-            wp_die($content, 200);
+        if ($post) {
+            wp_die($post->post_content, 200);
         }
 
         wp_die('Unable to preview project', 400);
+    }
+
+    public static function renderProjectPostRefreshUrl()
+    {
+        $postId = WordPressApi::getInput('postId');
+        $projectId = WordPressApi::getInput('projectId');
+
+        $post = static::getProjectAsWordPressPost($projectId, $postId);
+
+        if ($post) {
+            $postId = wp_update_post($post, true);
+            $postEditUrl = wp_nonce_url(admin_url('post.php'), 'edit').'&action=edit&post='.$postId;
+            wp_die($postEditUrl, 200);
+        }
+
+        wp_die('Unable to refresh post', 400);
     }
 }

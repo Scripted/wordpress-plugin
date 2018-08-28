@@ -72,7 +72,7 @@ class SettingsPage
         $accessToken = Config::getAccessToken();
 
         $out[] = '<div class="wrap">';
-        $out[] = '<div style="width:100px;margin-top:5px;" id="icon-scripted"><img src="'.Config::getLogoUrl().'"></div>';
+        $out[] = '<div style="width:150px;margin:50px 0px 30px 0px;" id="icon-scripted"><img src="'.Config::getLogoUrl().'"></div>';
         $out[] = '<h2>Settings</h2>';
         $out[] = '<p>Authentication is required to use your Scripted WordPress plugin.</p>';
         $out[] = '<p>To get your Organization Key and Access Token, please register or log in at Scripted.com and then <a href="https://www.scripted.com/business/account/api" target="_blank">click here</a>. Your private authentication credentials will be available there. Copy and paste them into the settings below!</p>';
