@@ -126,8 +126,6 @@ class WordPressApi
 
         $sql = implode(' ', $query);
 
-        // Config::log($sql);
-
         $postIds = [];
 
         array_walk($wpdb->get_results($sql, ARRAY_A), function ($result) use (&$postIds) {
@@ -151,31 +149,49 @@ class WordPressApi
     public static function importAndReplaceContentImages($content)
     {
         try {
+            // Let's make sure we are dealing with a string (hopefully HTML)
             $content = (string) $content;
 
+            // Let's find all occurences of img tags
             preg_match_all('/<img[^>]+>/i', $content, $originalImageTags);
 
+            // Let's create an array of replacement rules
             $imageTagReplacements = array_map(function ($imageTag) {
+                // Let's locate the first occurence of the src attribute
+                // on the given image tag
                 preg_match('/src="([^\"]+)"/', $imageTag, $imageTagSrc);
+
+                // Let's return a null replacement rule if we did not locate a
+                // src attribute
+                if (!isset($imageTagSrc[1])) {
+                    return null;
+                }
                 $originalImageTagSrc = $imageTagSrc[1];
 
+                // Let's create a unique filename from the original image src
                 $parts = parse_url($originalImageTagSrc);
                 $fileName = str_replace('/', '_', $parts['path']);
 
-                $uploadDir = wp_upload_dir();
-                $uploadPath = $uploadDir['path'] . '/' . $fileName;
-                $imageBody = file_get_contents($originalImageTagSrc);
-                $saveFile = fopen($uploadPath, 'w');
-                fwrite($saveFile, $imageBody);
-                fclose($saveFile);
-
-                $wp_filetype = wp_check_filetype(basename($uploadPath), null);
-
+                // Let's check for an existing attachment in the media library
+                // based on the computed filename
                 $attachment = get_page_by_title($fileName, OBJECT, 'attachment');
 
+                // Let's create a new attachment if not found
                 if (is_null($attachment)) {
+                    // Let's download the contents of the original image file, then
+                    // upload to the appropriate directory.
+                    $uploadDir = wp_upload_dir();
+                    $uploadPath = $uploadDir['path'] . '/' . $fileName;
+                    $imageBody = file_get_contents($originalImageTagSrc);
+                    $saveFile = fopen($uploadPath, 'w');
+                    fwrite($saveFile, $imageBody);
+                    fclose($saveFile);
+
+                    // Let's determine the file type of the original image
+                    $imageFileType = wp_check_filetype(basename($uploadPath), null);
+
                     $attachment = array(
-                        'post_mime_type' => $wp_filetype['type'],
+                        'post_mime_type' => $imageFileType['type'],
                         'post_title' => $fileName,
                         'post_content' => '',
                         'post_status' => 'inherit'
@@ -185,18 +201,28 @@ class WordPressApi
                     $attachmentId = $attachment->ID;
                 }
 
+                // Let's get the attachment post object
                 $newImage = get_post($attachmentId);
+                // Let's get the attachment fullsize path
                 $newImageFullsizePath = get_attached_file($newImage->ID);
+                // Let's get the attachment meta data
                 $attachmentData = wp_generate_attachment_metadata($attachmentId, $newImageFullsizePath);
+                // Let's update the attachment meta data
                 wp_update_attachment_metadata($attachmentId, $attachmentData);
+                // Let's get the attachment fullsize url
                 $newImageFullsizeUrl = wp_get_attachment_image_src($newImage->ID, 'fullsize');
 
+                // Let's return a set of replacement instructions
                 return [
                     'original' => $imageTag,
                     'new' => str_replace($originalImageTagSrc, $newImageFullsizeUrl[0], $imageTag)
                 ];
             }, $originalImageTags[0]);
 
+            // Let's remove any of those null replacements from missing src attributes
+            $imageTagReplacements = array_filter($imageTagReplacements);
+
+            // Let's loop over our replacement rules and perform the replacements
             array_walk($imageTagReplacements, function ($replacement) use (&$content) {
                 $content = str_replace($replacement['original'], $replacement['new'], $content);
             });
@@ -204,6 +230,7 @@ class WordPressApi
             // Not terribly sure what we should do here...
         }
 
+        // Let's return our (hopefully modified) HTML content
         return $content;
     }
 
