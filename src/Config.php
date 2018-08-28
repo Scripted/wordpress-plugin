@@ -129,7 +129,7 @@ class Config
      */
     public static function getIconUrl()
     {
-        return plugins_url('assets/images/favicon-16x16.png', dirname(__FILE__));
+        return WordPressApi::getPluginUrlFor('assets/images/favicon-16x16.png');
     }
 
     /**
@@ -139,7 +139,7 @@ class Config
      */
     public static function getLogoUrl()
     {
-        return plugins_url('assets/images/scripted-horizontal-dark.svg', dirname(__FILE__));
+        return WordPressApi::getPluginUrlFor('assets/images/scripted-horizontal-dark.svg');
     }
 
     /**
@@ -149,7 +149,7 @@ class Config
      */
     public static function getStylesheetUrl()
     {
-        return plugins_url('assets/styles/scripted.css', dirname(__FILE__));
+        return WordPressApi::getPluginUrlFor('assets/styles/scripted.css');
     }
 
     /**

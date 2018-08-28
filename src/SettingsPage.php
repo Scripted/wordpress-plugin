@@ -46,6 +46,11 @@ class SettingsPage
         );
     }
 
+    /**
+     * Renders settings page markup.
+     *
+     * @return void
+     */
     public static function render()
     {
       $out = [];

@@ -2,6 +2,8 @@
 
 namespace Scripted;
 
+use Exception;
+
 /**
  *
  */
@@ -14,6 +16,7 @@ class WordPressApi
      * @param  mixed  $value
      * @param  string  $deprecated
      * @param  string  $autoload
+     *
      * @return boolean
      */
     public static function addOption($option, $value = '', $deprecated = '', $autoload = 'yes')
@@ -75,11 +78,24 @@ class WordPressApi
      *
      * @param  string $option
      * @param  mixed  $default
+     *
      * @return mixed
      */
     public static function getOption($option, $default = null)
     {
         return get_option($option, $default);
+    }
+
+    /**
+     * Attempts to get plugin url for a given path.
+     *
+     * @param  string $path
+     *
+     * @return string
+     */
+    public static function getPluginUrlFor($path)
+    {
+        return plugins_url((string) $path, dirname(__FILE__));
     }
 
     /**
@@ -125,61 +141,68 @@ class WordPressApi
     }
 
     /**
-     * [importAndReplaceContentImages description]
-     * @param  [type] $content [description]
-     * @return [type]          [description]
+     * Attempts to replace all inline images of a given html body with WordPress
+     * media attachments.
+     *
+     * @param  string $content
+     *
+     * @return string
      */
     public static function importAndReplaceContentImages($content)
     {
-        $content = (string) $content;
+        try {
+            $content = (string) $content;
 
-        preg_match_all('/<img[^>]+>/i', $content, $originalImageTags);
+            preg_match_all('/<img[^>]+>/i', $content, $originalImageTags);
 
-        $imageTagReplacements = array_map(function ($imageTag) {
-            preg_match('/src="([^\"]+)"/', $imageTag, $imageTagSrc);
-            $originalImageTagSrc = $imageTagSrc[1];
+            $imageTagReplacements = array_map(function ($imageTag) {
+                preg_match('/src="([^\"]+)"/', $imageTag, $imageTagSrc);
+                $originalImageTagSrc = $imageTagSrc[1];
 
-            $parts = parse_url($originalImageTagSrc);
-            $fileName = str_replace('/', '_', $parts['path']);
+                $parts = parse_url($originalImageTagSrc);
+                $fileName = str_replace('/', '_', $parts['path']);
 
-            $uploadDir = wp_upload_dir();
-            $uploadPath = $uploadDir['path'] . '/' . $fileName;
-            $imageBody = file_get_contents($originalImageTagSrc);
-            $saveFile = fopen($uploadPath, 'w');
-            fwrite($saveFile, $imageBody);
-            fclose($saveFile);
+                $uploadDir = wp_upload_dir();
+                $uploadPath = $uploadDir['path'] . '/' . $fileName;
+                $imageBody = file_get_contents($originalImageTagSrc);
+                $saveFile = fopen($uploadPath, 'w');
+                fwrite($saveFile, $imageBody);
+                fclose($saveFile);
 
-            $wp_filetype = wp_check_filetype(basename($uploadPath), null);
+                $wp_filetype = wp_check_filetype(basename($uploadPath), null);
 
-            $attachment = get_page_by_title($fileName, OBJECT, 'attachment');
+                $attachment = get_page_by_title($fileName, OBJECT, 'attachment');
 
-            if (is_null($attachment)) {
-                $attachment = array(
-                    'post_mime_type' => $wp_filetype['type'],
-                    'post_title' => $fileName,
-                    'post_content' => '',
-                    'post_status' => 'inherit'
-                );
-                $attachmentId = wp_insert_attachment($attachment, $uploadPath);
-            } else {
-                $attachmentId = $attachment->ID;
-            }
+                if (is_null($attachment)) {
+                    $attachment = array(
+                        'post_mime_type' => $wp_filetype['type'],
+                        'post_title' => $fileName,
+                        'post_content' => '',
+                        'post_status' => 'inherit'
+                    );
+                    $attachmentId = wp_insert_attachment($attachment, $uploadPath);
+                } else {
+                    $attachmentId = $attachment->ID;
+                }
 
-            $newImage = get_post($attachmentId);
-            $newImageFullsizePath = get_attached_file($newImage->ID);
-            $attachmentData = wp_generate_attachment_metadata($attachmentId, $newImageFullsizePath);
-            wp_update_attachment_metadata($attachmentId, $attachmentData);
-            $newImageFullsizeUrl = wp_get_attachment_image_src($newImage->ID, 'fullsize');
+                $newImage = get_post($attachmentId);
+                $newImageFullsizePath = get_attached_file($newImage->ID);
+                $attachmentData = wp_generate_attachment_metadata($attachmentId, $newImageFullsizePath);
+                wp_update_attachment_metadata($attachmentId, $attachmentData);
+                $newImageFullsizeUrl = wp_get_attachment_image_src($newImage->ID, 'fullsize');
 
-            return [
-                'original' => $imageTag,
-                'new' => str_replace($originalImageTagSrc, $newImageFullsizeUrl[0], $imageTag)
-            ];
-        }, $originalImageTags[0]);
+                return [
+                    'original' => $imageTag,
+                    'new' => str_replace($originalImageTagSrc, $newImageFullsizeUrl[0], $imageTag)
+                ];
+            }, $originalImageTags[0]);
 
-        array_walk($imageTagReplacements, function ($replacement) use (&$content) {
-            $content = str_replace($replacement['original'], $replacement['new'], $content);
-        });
+            array_walk($imageTagReplacements, function ($replacement) use (&$content) {
+                $content = str_replace($replacement['original'], $replacement['new'], $content);
+            });
+        } catch (Exception $e) {
+            // Not terribly sure what we should do here...
+        }
 
         return $content;
     }
@@ -188,6 +211,7 @@ class WordPressApi
      * Removes WordPress option by key.
      *
      * @param  string $option
+     *
      * @return mixed
      */
     public static function removeOption($option)
@@ -214,6 +238,7 @@ class WordPressApi
      *
      * @param  string $option
      * @param  mixed  $default
+     *
      * @return mixed
      */
     public static function setOption($option, $value)

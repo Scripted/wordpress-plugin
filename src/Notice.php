@@ -22,6 +22,7 @@ class Notice
      *
      * @param  string  $message
      * @param  boolean $error
+     *
      * @return void
      */
     public static function renderAdminDialog($message, $error = false)

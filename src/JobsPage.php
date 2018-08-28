@@ -300,7 +300,6 @@ class JobsPage
                         data: '',
                         success: function(data) {
                             window.location = data;
-                            // console.log(data);
                         },
                         error: function (error) {
                             console.error(error);
