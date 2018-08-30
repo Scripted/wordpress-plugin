@@ -3,6 +3,7 @@
 namespace Scripted;
 
 use Exception;
+use stdClass;
 
 /**
  *
@@ -22,6 +23,16 @@ class WordPressApi
     public static function addOption($option, $value = '', $deprecated = '', $autoload = 'yes')
     {
         return add_option($option, $value, $deprecated, $autoload);
+    }
+
+    /**
+     * Attempts to clear all items from WordPress cache.
+     *
+     * @return bool
+     */
+    public static function clearCache()
+    {
+        return wp_cache_flush();
     }
 
     /**
@@ -120,7 +131,7 @@ class WordPressApi
 
         $query = [];
         $query[] = "select post_id, meta_value from $wpdb->postmeta";
-        $query[] = "where meta_key = '".JobsPage::PROJECT_ID_META_KEY."'";
+        $query[] = "where meta_key = '".Config::PROJECT_ID_META_KEY."'";
         $query[] = "and";
         $query[] = "meta_value in($projectIdCsv)";
 
@@ -213,10 +224,11 @@ class WordPressApi
                 $newImageFullsizeUrl = wp_get_attachment_image_src($newImage->ID, 'fullsize');
 
                 // Let's return a set of replacement instructions
-                return [
-                    'original' => $imageTag,
-                    'new' => str_replace($originalImageTagSrc, $newImageFullsizeUrl[0], $imageTag)
-                ];
+                $replacement = new stdClass();
+                $replacement->original = $imageTag;
+                $replacement->new = str_replace($originalImageTagSrc, $newImageFullsizeUrl[0], $imageTag);
+
+                return $replacement;
             }, $originalImageTags[0]);
 
             // Let's remove any of those null replacements from missing src attributes
@@ -224,7 +236,7 @@ class WordPressApi
 
             // Let's loop over our replacement rules and perform the replacements
             array_walk($imageTagReplacements, function ($replacement) use (&$content) {
-                $content = str_replace($replacement['original'], $replacement['new'], $content);
+                $content = str_replace($replacement->original, $replacement->new, $content);
             });
         } catch (Exception $e) {
             // Not terribly sure what we should do here...

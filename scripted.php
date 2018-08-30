@@ -10,12 +10,15 @@ Author URI: https://www.scripted.com
 */
 
 // Let's ensure the plugin classes are included.
+require_once(dirname( __FILE__ ) . '/aws.phar');
 require_once(dirname( __FILE__ ) . '/src/WordPressApi.php');
 require_once(dirname( __FILE__ ) . '/src/Config.php');
 require_once(dirname( __FILE__ ) . '/src/Http.php');
 require_once(dirname( __FILE__ ) . '/src/SettingsPage.php');
 require_once(dirname( __FILE__ ) . '/src/JobsPage.php');
+require_once(dirname( __FILE__ ) . '/src/JobTasks.php');
 require_once(dirname( __FILE__ ) . '/src/Notice.php');
+require_once(dirname( __FILE__ ) . '/src/Exceptions/AccessTokenIsUnauthorized.php');
 require_once(dirname( __FILE__ ) . '/src/Tools/ContentFormatter.php');
 
 // Let's initialize our plugin.
@@ -57,18 +60,27 @@ add_action(
 
 // Let's tell WordPress how to handle ajax requests for project previews.
 add_action(
-    Scripted\WordPressApi::getAjaxAction(Scripted\JobsPage::AJAX_FINISHED_JOB_PREVIEW),
-    [Scripted\JobsPage::class, 'renderFinishedJobPreview']
+    Scripted\WordPressApi::getAjaxAction(Scripted\JobTasks::AJAX_FINISHED_JOB_PREVIEW),
+    [Scripted\JobTasks::class, 'renderFinishedJobPreview']
 );
 
 // Let's tell WordPress how to handle ajax requests for converting a project into a post.
 add_action(
-    Scripted\WordPressApi::getAjaxAction(Scripted\JobsPage::AJAX_CREATE_PROJECT_DRAFT),
-    [Scripted\JobsPage::class, 'renderProjectPostEditUrl']
+    Scripted\WordPressApi::getAjaxAction(Scripted\JobTasks::AJAX_CREATE_PROJECT_DRAFT),
+    [Scripted\JobTasks::class, 'renderProjectPostEditUrl']
 );
 
 // Let's tell WordPress how to handle ajax requests for refreshing a project post.
 add_action(
-    Scripted\WordPressApi::getAjaxAction(Scripted\JobsPage::AJAX_REFRESH_PROJECT_POST),
-    [Scripted\JobsPage::class, 'renderProjectPostRefreshUrl']
+    Scripted\WordPressApi::getAjaxAction(Scripted\JobTasks::AJAX_REFRESH_PROJECT_POST),
+    [Scripted\JobTasks::class, 'renderProjectPostRefreshUrl']
+);
+
+// Let's tell WordPress how to handle post publish events for Scripted Jobs.
+// AWS Access Key and Secret must be configured for this action to be effective.
+// Only Posts with a Scripted Job ID meta data value set will be affected.
+add_action(
+    Scripted\JobTasks::POST_PUBLISHED_ACTION,
+    [Scripted\JobTasks::class, 'sendPostPublishedEvent'],
+    10, 2
 );

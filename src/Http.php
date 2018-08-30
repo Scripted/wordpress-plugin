@@ -2,6 +2,8 @@
 
 namespace Scripted;
 
+use Scripted\Exceptions\AccessTokenIsUnauthorized;
+
 /**
  *
  */
@@ -14,29 +16,56 @@ class Http
      */
     public const DEFAULT_CACHE_LENGTH_SECONDS = 600;
 
+
+    /**
+     * Http get verb.
+     *
+     * @var string
+     */
+    public const GET = 'GET';
+
+    /**
+     * Http post verb.
+     *
+     * @var string
+     */
+    public const POST = 'POST';
+
+
     /**
      * Attempts to make an HTTP request with the given parameters.
      *
-     * @param  string  $type
-     * @param  boolean $post
-     * @param  string  $fields
+     * @param  string  $path
+     * @param  string $verb
+     * @param  array  $config
      *
      * @return mixed
      */
-    public static function curlRequest($type, $post = false, $fields = '')
+    public static function curlRequest($path, $verb, array $config = array())
     {
-        $orgKey = Config::getOrgKey();
-        $accessToken = Config::getAccessToken();
+        $orgKey = static::getArrayDefault($config['orgKey'], Config::getOrgKey());
+        $accessToken = static::getArrayDefault($config['accessToken'], Config::getAccessToken());
+
+        if (!$orgKey || !$accessToken) {
+            throw new AccessTokenIsUnauthorized();
+        }
+
+        $clearCache = (bool) static::getArrayDefault($config['clearCache']);
         $url = sprintf(
             '%s/%s/v1/%s',
             Config::BASE_API_URL,
             $orgKey,
-            $type
+            $path
         );
+        $cacheKey = sprintf('%s::%s::%s', $orgKey, $accessToken, $url);
 
-        Config::log($url);
+        Config::log($cacheKey);
 
-        $cachedResults = WordPressApi::getCache($url);
+        if ($clearCache) {
+            WordPressApi::setCache($cacheKey, null);
+        }
+
+        $cachedResults = WordPressApi::getCache($cacheKey);
 
         if ($cachedResults) {
             return $cachedResults;
@@ -48,7 +77,7 @@ class Http
         curl_setopt($ch, CURLOPT_URL, $url);
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
 
-        if ((bool) $post) {
+        if ($verb == static::POST) {
             curl_setopt($ch, CURLOPT_POST, 1);
             curl_setopt($ch, CURLOPT_POSTFIELDS, $fields);
         } else {
@@ -57,63 +86,41 @@ class Http
 
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
         $result = curl_exec($ch);
+        $statusCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         curl_close($ch);
 
-        if ($result === false) {
-            return false;
+        if ($statusCode >= 400) {
+            throw new AccessTokenIsUnauthorized();
         }
 
-        list($header, $contents) = preg_split( '/([\r\n][\r\n])\\1/', $result, 2 );
-        if ($contents != '') {
-            $contents = json_decode($contents);
-            if (isset($contents->data) && count($contents->data) > 0) {
-                if(isset($contents->total_count)) {
-                    WordPressApi::setCache($url, $contents, static::DEFAULT_CACHE_LENGTH_SECONDS);
-                    return $contents;
+        if ($result) {
+            list($header, $contents) = preg_split('/([\r\n][\r\n])\\1/', $result, 2);
+            if ($contents != '') {
+                $contents = json_decode($contents);
+                if (isset($contents->data) && count($contents->data) > 0) {
+                    if(isset($contents->total_count)) {
+                        WordPressApi::setCache($cacheKey, $contents, static::DEFAULT_CACHE_LENGTH_SECONDS);
+                        return $contents;
+                    }
+                    WordPressApi::setCache($cacheKey, $contents->data, static::DEFAULT_CACHE_LENGTH_SECONDS);
+                    return $contents->data;
                 }
-                WordPressApi::setCache($url, $contents->data, static::DEFAULT_CACHE_LENGTH_SECONDS);
-                return $contents->data;
             }
         }
 
-        return false;
+        return null;
     }
 
     /**
-     * Attempts to request a benign resource with the given organization key and
-     * access token as a means of determining whether the credentials are still
-     * authorized.
+     * Attempts to return the value of var, otherwise returns default.
      *
-     * @param  string  $orgKey
-     * @param  string  $accessToken
+     * @param  mixed &$var
+     * @param  mixed $default
      *
-     * @return boolean
+     * @return mixed
      */
-    public static function isAccessTokenValid($orgKey, $accessToken)
+    protected static function getArrayDefault(&$var, $default = null)
     {
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_HTTPHEADER, array('Authorization: Bearer '.$accessToken));
-        curl_setopt($ch, CURLOPT_HEADER, 1);
-        curl_setopt($ch, CURLOPT_URL, Config::BASE_API_URL.'/'.$orgKey.'/v1/industries/');
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-
-        curl_setopt($ch, CURLOPT_POST, 0);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-        $result = curl_exec($ch);
-        curl_close($ch);
-
-        if ($result === false) {
-            return false;
-        }
-
-        list($header, $contents) = preg_split( '/([\r\n][\r\n])\\1/', $result, 2 );
-        $industries = json_decode($contents);
-        if ($contents != '') {
-            if (isset($industries->data) && count($industries->data) > 0) {
-                return true;
-            }
-        }
-
-        return false;
+        return isset($var) ? $var : $default;
     }
 }

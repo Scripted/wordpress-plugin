@@ -45,7 +45,7 @@ class Notice
         $accessToken = Config::getAccessToken();
         $page = (isset($_GET['page']) ? $_GET['page'] : null);
 
-        if ((empty($orgKey) || empty($accessToken)) && $page != SettingsPage::SLUG && current_user_can('manage_options')) {
+        if ((empty($orgKey) || empty($accessToken)) && $page != SettingsPage::SLUG && current_user_can(Config::REQUIRED_CAPABILITY)) {
             static::renderAdminDialog(
                 sprintf(
                     'You must %sconfigure the plugin%s to enable Scripted for WordPress.',
