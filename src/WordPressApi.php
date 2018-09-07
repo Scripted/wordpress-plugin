@@ -110,6 +110,18 @@ class WordPressApi
     }
 
     /**
+     * Builds an admin edit post url for the given post ID.
+     *
+     * @param  string $postId
+     *
+     * @return string
+     */
+    public static function getPostEditUrl($postId)
+    {
+        return wp_nonce_url(admin_url('post.php'), 'edit' ).'&action=edit&post='.$postId;
+    }
+
+    /**
      * Attempts to find all post ids that are associated with a given scripted
      * project id.
      *
@@ -123,6 +135,10 @@ class WordPressApi
 
         if (!is_array($projectIds)) {
             $projectIds = [$projectIds];
+        }
+
+        if (empty($projectIds)) {
+            return [];
         }
 
         $projectIdCsv = implode(',', array_map(function ($projectId) {

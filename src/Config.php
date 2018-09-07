@@ -130,6 +130,17 @@ class Config
     }
 
     /**
+     * Determines if plugin has sufficient configuration to connect to the
+     * Scripted platform via API.
+     *
+     * @return bool
+     */
+    public static function canConnectToPlatform()
+    {
+        return (bool) (static::getOrgKey() && static::getAccessToken());
+    }
+
+    /**
      * Removes plugin options.
      *
      * @return void
@@ -218,6 +229,16 @@ class Config
     public static function getStylesheetUrl()
     {
         return WordPressApi::getPluginUrlFor('assets/styles/scripted.css');
+    }
+
+    /**
+     * Creates and returns current stylesheet url.
+     *
+     * @return string
+     */
+    public static function getTemplatesPath()
+    {
+        return dirname(dirname( __FILE__ )) . '/assets/templates';
     }
 
     /**

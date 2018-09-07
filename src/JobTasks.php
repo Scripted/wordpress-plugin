@@ -60,8 +60,8 @@ class JobTasks
         }
 
         try {
-            $projectJob = Http::curlRequest('jobs/'.$projectId, Http::GET);
-            $projectContent = Http::curlRequest('jobs/'.$projectId.'/html_contents', Http::GET);
+            $projectJob = Http::getResponse('jobs/'.$projectId, Http::GET);
+            $projectContent = Http::getResponse('jobs/'.$projectId.'/html_contents', Http::GET);
 
             if (!empty($projectJob) && !empty($content = $projectContent->html_contents)) {
                 if (is_array($content)) {
@@ -177,6 +177,16 @@ class JobTasks
         wp_die('Unable to refresh post', 400);
     }
 
+    /**
+     * Attempts to send a given post to an AWS SNS topic if the post
+     * is associated with a Scripted job (has job ID meta data) and AWS credentials
+     * and SNS topic ARN are configured. Otherwise, nothing will happen here.
+     *
+     * @param  integer $postId
+     * @param  WP_Post $post
+     *
+     * @return void
+     */
     public static function sendPostPublishedEvent($postId, $post)
     {
         $awsAccessKey = Config::getAwsAccessKey();

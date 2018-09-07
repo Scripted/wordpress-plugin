@@ -3,6 +3,7 @@ Contributors: stevenmaguire
 Donate link:
 Tags: writing, blog posts, twitter, tweet, hire blogger, hire writer, custom content, scripted.com, expert writer, scripted, freelance writer
 Requires at least: 3.3
+Requires PHP: >=5.5
 Tested up to: 4.9.8
 Stable tag: 3.0.0
 License: GPLv2 or later
@@ -29,12 +30,14 @@ See how Scripted works here: [http://scripted.com/how-it-works/](https://www.scr
 == Screenshots ==
 
 1. Scripted API settings
-2. Create a Job
-3. View Current Jobs
-4. View Finished Jobs and Create Posts
+2. View Current Jobs
+3. View Finished Jobs and Create Posts
 
 == Changelog ==
 
 
-
 == Upgrade notice ==
+
+- Upgrading to version 3.x from 2.x will require that you re-enter your Scripted.com org key and access token.
+- This plugin makes use of [version 3.67.7 of the aws-sdk-php library](https://github.com/aws/aws-sdk-php/tree/3.67.7). The library is included as a phar file that is approximately 11 mb in size and occupies the following root namespaces: `Aws`, `GuzzleHttp`, `JmesPath`, 'Psr'.
+- This plugin makes use of [version 2.5.0 of the twig library](https://github.com/twigphp/Twig/tree/v2.5.0). The library is included as a phar file that is approximately 1 mb in size and occupies the following root namespaces: `Twig_`, 'Symfony'.

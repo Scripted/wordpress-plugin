@@ -1,0 +1,5 @@
+{% if success %}
+<div id="{{ id }}" class="notice notice-success updated fade"><p>{{ success }}</p></div>
+{% elseif failure %}
+<div id="{{ id }}" class="notice notice-error error fade"><p>{{ failure }}</p></div>
+{% endif %}

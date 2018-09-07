@@ -1,0 +1,72 @@
+<div class="wrap">
+    {% include 'partials/logo.html' %}
+    <form action="" method="post" name="{{ formName }}">
+        {% if formNonce %}{{ formNonce | raw }}{% endif %}
+        <h2>Settings</h2>
+        <p>Authentication is required to use your Scripted WordPress plugin.</p>
+        <p>To get your Organization Key and Access Token, please register or log in at Scripted.com and then <a href="https://www.scripted.com/business/account/api" target="_blank">click here</a>. Your private authentication credentials will be available there. Copy and paste them into the settings below!</p>
+        <table class="form-table">
+            <tbody>
+                <tr valign="top">
+                    <th scope="row">
+                        <label for="{{ orgKeyInputName }}">Organization Key</label>
+                    </th>
+                    <td>
+                        <input type="text" class="regular-text" value="{{ orgKey }}" name="{{ orgKeyInputName }}">
+                    </td>
+                </tr>
+                <tr valign="top">
+                    <th scope="row">
+                        <label for="{{ accessTokenInputName }}">Access Token</label>
+                    </th>
+                    <td>
+                        <textarea rows="5" class="regular-text" name="{{ accessTokenInputName }}">{{ accessToken }}</textarea>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        {% if displayAdvancedSettings %}
+        <h2>Advanced Settings</h2>
+        <p>Scripted.com uses AWS SNS notifications to report when posts are moved into the published state. Notifications are only sent when the following criteria are met:</p>
+        <ul>
+            <li>&bull; AWS Access Key, Access Secret, and SNS Topic ARN are configured</li>
+            <li>&bull; Valid Organization Key is configured</li>
+            <li>&bull; Published post was imported via Scripted.com plugin</li>
+        </ul>
+        <table class="form-table">
+            <tbody>
+                <tr valign="top">
+                    <th scope="row">
+                        <label for="{{ awsAccessKeyInputName }}">AWS Access Key</label>
+                    </th>
+                    <td>
+                        <input type="text" class="regular-text" value="{{ awsAccessKey }}" name="{{ awsAccessKeyInputName }}">
+                    </td>
+                </tr>
+                <tr valign="top">
+                    <th scope="row">
+                        <label for="{{ awsAccessSecretInputName }}">AWS Access Secret</label>
+                    </th>
+                    <td>
+                        <input type="text" class="regular-text" value="{{ awsAccessSecret }}" name="{{ awsAccessSecretInputName }}">
+                    </td>
+                </tr>
+                <tr valign="top">
+                    <th scope="row">
+                        <label for="{{ awsPostPublishTopicArnInputName }}">AWS SNS Topic ARN</label>
+                    </th>
+                    <td>
+                        <input type="text" class="regular-text" value="{{ awsPostPublishTopicArn }}" name="{{ awsPostPublishTopicArnInputName }}">
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        {% endif %}
+        <p class="submit">
+            <input type="submit" value="Save Changes" class="button-primary" id="submit" name="submit">
+            {% if advancedSettingsUrl %}
+            <a style="display: block; width: 10px;" href="{{ advancedSettingsUrl }}">.</a>
+            {% endif %}
+        </p>
+    </form>
+</div>

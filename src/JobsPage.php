@@ -17,64 +17,79 @@ class JobsPage
      */
     public const SLUG = 'scripted_jobs';
 
-
     /**
-     * Configures the settings page.
+     * Builds an ajax preview url for the given job.
      *
+     * @param  object $job
      * @return string
      */
-    public static function configure()
+    public static function getJobAjaxPreviewUrl($job)
     {
-        $orgKey = Config::getOrgKey();
-        $accessToken = Config::getAccessToken();
+        return sprintf(
+            '%s&action=%s&projectId=%s',
+            wp_nonce_url(admin_url('admin-ajax.php'), JobTasks::AJAX_FINISHED_JOB_PREVIEW ),
+            JobTasks::AJAX_FINISHED_JOB_PREVIEW,
+            $job->id
+        );
+    }
 
-        if (empty($orgKey) || empty($accessToken)) {
-            return;
+    /**
+     * Builds a list of filter objects.
+     *
+     * @return array
+     */
+    public static function getJobFilters()
+    {
+        $filters = [];
+        $currentFilter = (string) WordPressApi::getInput('filter');
+        $filterConfig = [
+            'All' => '',
+            'Accepted' => 'accepted',
+            'Finished' => 'finished',
+            'Screening' => 'screening',
+            'Writing' => 'writing',
+            'Draft Ready' => 'draft_ready',
+            'Revising' => 'revising',
+            'Final Ready' => 'final_ready',
+            'In Progress' => 'in_progress',
+            'Needs Review' => 'needs_review',
+        ];
+
+        array_walk($filterConfig, function ($slug, $name) use ($currentFilter, &$filters) {
+            $filters[] = new Jobs\Filter($name, $slug, $slug == $currentFilter);
+        });
+
+        return $filters;
+    }
+
+    /**
+     * Attempts to get the first post id from the given collection of post ids
+     * associated with the given job id.
+     *
+     * @param  object $job
+     * @param  array  $postIds
+     *
+     * @return string|null
+     */
+    public static function getPostIdForJob($job, array $postIds)
+    {
+        if (isset($postIds[$job->id])) {
+            return (string) array_shift($postIds[$job->id]);
         }
 
-        $currentJobPageSlug = add_submenu_page(
-            SettingsPage::SLUG,
-            'Jobs',
-            'Jobs',
-            Config::REQUIRED_CAPABILITY,
-            static::SLUG,
-            [static::class, 'render']
-        );
-
-        add_action(
-            sprintf('admin_footer-%s', $currentJobPageSlug),
-            [static::class, 'renderAsyncJobManagementJavascript']
-        );
-
-        add_action(
-            sprintf('admin_print_styles-%s', $currentJobPageSlug),
-            function () {
-                $adminStyleName = 'scriptedAdminStyle';
-                wp_register_style($adminStyleName, Config::getStylesheetUrl());
-                wp_enqueue_style($adminStyleName);
-            }
-        );
+        return null;
     }
 
     /**
      * Fetches all the jobs based on the current query, then renders a list view
      * in the WordPress admin screen.
      *
-     * @return void
+     * @return string
      */
     public static function render()
     {
         wp_enqueue_style('thickbox');
         wp_enqueue_script('thickbox');
-
-        $out[] = '<div class="wrap" role="container">';
-
-        if ( $_GET['auth'] )
-            $out[] = '<div class="notice notice-success" id="message"><p>Great! Your code validation is correct. Thanks, enjoy...</p></div>';
-
-        $out[] = '<div style="width:150px;margin:50px 0px 30px 0px;" id="icon-scripted"><img src="'.Config::getLogoUrl().'"></div>';
-
-        $out[] = '<h2>Jobs</h2>';
 
         try {
             $paged = WordPressApi::getInput('paged');
@@ -85,94 +100,40 @@ class JobsPage
                 'next_cursor' => $paged
             ]));
 
-            $result = Http::curlRequest($jobUrl, Http::GET);
-            $pagination = ContentFormatter::getJobPagination($result);
+            $result = Http::getResponse($jobUrl, Http::GET);
 
-            $out[] = $pagination;
+            $postIds = [];
+
             if (is_array($result->data)) {
-                $out[] = ContentFormatter::getJobGrid($result->data);
-            } else {
-                $out[] = '<div class="no-data">';
-                $out[] = '<h3>No jobs found</h3>';
-                $out[] = '</div>';
+                $jobIds = array_map(function ($job) {
+                    return $job->id;
+                }, $result->data);
+
+                $postIds = WordPressApi::getPostIdsByProjectIds($jobIds);
             }
-            $out[] = $pagination;
+
+            return View::render('jobs', [
+                'paginatedJobs' => $result,
+                'postIds' => $postIds,
+            ]);
         } catch (AccessTokenIsUnauthorized $e) {
-            $out[] = '<div class="no-data">';
-            $out[] = '<h3>It appears as if the access token is not valid.</h3>';
-            $out[] = '</div>';
+            return View::render('jobs');
         }
-
-        $out[] ='</div>';
-
-        echo implode('', array_map('trim', $out));
     }
 
     /**
      * Renders the client side Javascript onto the page to aid in the functionality
      * of the jobs list view.
      *
-     * @return void
+     * @return string
      */
     public static function renderAsyncJobManagementJavascript()
     {
-        ?>
-        <script>
-            var Scripted = {
-                createProjectPost: function (projectId, isPublished, caller) {
-                    var link = jQuery(caller);
-                    var originalText = link.text();
-                    link.text('Creating...').attr('disabled', true);
-                    jQuery.ajax({
-                        type: 'POST',
-                        url: '<?php echo wp_nonce_url( admin_url('admin-ajax.php'), JobTasks::AJAX_CREATE_PROJECT_DRAFT);?>&isPublished='+ (isPublished ? '1' : '0') +'&projectId='+projectId+'&action=<?php echo JobTasks::AJAX_CREATE_PROJECT_DRAFT; ?>',
-                        data: '',
-                        success: function(data) {
-                            window.location = data;
-                        },
-                        error: function (error) {
-                            var errorMessage = 'Failed to create project post: ' + error;
-                            Scripted.showErrorMessage(errorMessage);
-                            link.text(originalText).attr('disabled', false);
-                        }
-                    });
-                },
-                refreshProjectPost: function (projectId, postId, caller) {
-                    var link = jQuery(caller);
-                    var originalText = link.text();
-                    link.text('Refreshing...').attr('disabled', true);
-                    jQuery.ajax({
-                        type: 'POST',
-                        url: '<?php echo wp_nonce_url( admin_url('admin-ajax.php'), JobTasks::AJAX_REFRESH_PROJECT_POST);?>&projectId='+projectId+'&postId='+postId+'&action=<?php echo JobTasks::AJAX_REFRESH_PROJECT_POST; ?>',
-                        data: '',
-                        success: function(data) {
-                            window.location = data;
-                        },
-                        error: function (xhr, status, error) {
-                            var errorMessage = 'Failed to refresh project post: ' + error;
-                            Scripted.showErrorMessage(errorMessage);
-                            link.text(originalText).attr('disabled', false);
-                        }
-                    });
-                },
-                showErrorMessage: function (errorMessage) {
-                    var errorBanner = jQuery('<div />').hide().addClass('notice').addClass('notice-error').append('<p>'+errorMessage+'</p>');
-                    jQuery('[role="container"]').prepend(errorBanner);
-                    errorBanner.slideDown(function (e) {
-                        setTimeout(function () {
-                            errorBanner.slideUp();
-                        }, 5000);
-                    });
-                }
-            };
-
-            jQuery( document ).ready(function() {
-                jQuery('.filter-jobs').change(function() {
-                    var filter = jQuery(this).val();
-                    document.location.href = '<?php echo admin_url('admin.php?page=scripted_jobs');?>&filter='+filter
-                });
-            });
-        </script>
-        <?php
+        $options = [
+            'createProjectPostBaseUrl' => wp_nonce_url( admin_url('admin-ajax.php'), JobTasks::AJAX_CREATE_PROJECT_DRAFT).'&action='.JobTasks::AJAX_CREATE_PROJECT_DRAFT,
+            'filterJobsBaseUrl' => admin_url('admin.php?page='.static::SLUG),
+            'refreshProjectPostBaseUrl' => wp_nonce_url(admin_url('admin-ajax.php'), JobTasks::AJAX_REFRESH_PROJECT_POST).'&action='.JobTasks::AJAX_REFRESH_PROJECT_POST,
+        ];
+        return View::render('jobs.async-job-management-js', $options);
     }
 }

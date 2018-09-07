@@ -1,0 +1,30 @@
+{% if paginatedJobs %}
+{% set jobFilters = get_job_filters() %}
+<div class="tablenav">
+    <div class="alignleft actions bulkactions">
+        <select class="filter-jobs" name="action">
+        {% for filter in jobFilters %}
+        {% if filter.selected %}
+        <option selected="selected" value="{{ filter.slug }}">{{ filter.name }}</option>
+        {% else %}
+        <option value="{{ filter.slug }}">{{ filter.name }}</option>
+        {% endif %}
+        {% endfor %}
+        </select>
+    </div>
+
+    {% if paginatedJobs.paging %}
+    {% set nextCursor = paginatedJobs.paging.next_cursor %}
+    {% set totalProjects = paginatedJobs.total_count %}
+    {% set nextPage = paginatedJobs.paging.has_next ? '' : 'disabled' %}
+    {% set pageOne = paginatedJobs.paging.has_next ? '' : 'one-page' %}
+    <div class="tablenav-pages {{ pageOne }}">
+        <span class="pagination-links">
+            <span class="displaying-num">{{ totalProjects }} items</span>
+            <a href="admin.php?page=scripted_jobs&paged={{ nextCursor }}&filter={{ filter }}" title="Go to the next page" class="next-page {{ nextPage }}">&rsaquo;</a>
+        </span>
+    </div>
+    {% endif %}
+    <br class="clear">
+</div>
+{% endif %}
