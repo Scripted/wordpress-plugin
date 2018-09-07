@@ -3,7 +3,6 @@
 namespace Scripted;
 
 use Scripted\Exceptions\AccessTokenIsUnauthorized;
-use Scripted\Tools\ContentFormatter;
 
 /**
  *

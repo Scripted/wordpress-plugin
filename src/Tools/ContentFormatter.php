@@ -2,7 +2,6 @@
 
 namespace Scripted\Tools;
 
-use Scripted\JobTasks;
 use Scripted\WordPressApi;
 use WP_Post;
 
