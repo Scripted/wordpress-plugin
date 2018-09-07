@@ -38,6 +38,6 @@ See how Scripted works here: [http://scripted.com/how-it-works/](https://www.scr
 
 == Upgrade notice ==
 
-- Upgrading to version 3.x from 2.x will require that you re-enter your Scripted.com org key and access token.
+- Upgrading to version 3.x from 2.x of this plugin will require that you re-enter your Scripted.com org key and access token.
 - This plugin makes use of [version 3.67.7 of the aws-sdk-php library](https://github.com/aws/aws-sdk-php/tree/3.67.7). The library is included as a phar file that is approximately 11 mb in size and occupies the following root namespaces: `Aws`, `GuzzleHttp`, `JmesPath`, 'Psr'.
-- This plugin makes use of [version 2.5.0 of the twig library](https://github.com/twigphp/Twig/tree/v2.5.0). The library is included as a phar file that is approximately 1 mb in size and occupies the following root namespaces: `Twig_`, 'Symfony'.
+- This plugin makes use of [version 1.35.4 of the twig library](https://github.com/twigphp/Twig/tree/v1.35.4). The library is included as a phar file that is approximately 1 mb in size and occupies the following root namespaces: `Twig_`, 'Symfony'.

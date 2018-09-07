@@ -4,8 +4,8 @@ namespace Scripted;
 
 use Twig_Environment;
 use Twig_Error_Loader;
-use Twig_Filter;
-use Twig_Function;
+use Twig_SimpleFilter;
+use Twig_SimpleFunction;
 use Twig_Loader_Filesystem;
 
 class View
@@ -28,19 +28,19 @@ class View
         $this->twig->addGlobal('filter', WordPressApi::getInput('filter'));
         $this->twig->addGlobal('auth', WordPressApi::getInput('auth'));
         $this->twig->addFilter(
-            new Twig_Filter('trim_quotes', [Tools\ContentFormatter::class, 'trimQuotes'])
+            new Twig_SimpleFilter('trim_quotes', [Tools\ContentFormatter::class, 'trimQuotes'])
         );
         $this->twig->addFunction(
-            new Twig_Function('get_job_ajax_preview_url', [JobsPage::class, 'getJobAjaxPreviewUrl'])
+            new Twig_SimpleFunction('get_job_ajax_preview_url', [JobsPage::class, 'getJobAjaxPreviewUrl'])
         );
         $this->twig->addFunction(
-            new Twig_Function('get_job_filters', [JobsPage::class, 'getJobFilters'])
+            new Twig_SimpleFunction('get_job_filters', [JobsPage::class, 'getJobFilters'])
         );
         $this->twig->addFunction(
-            new Twig_Function('get_post_edit_url', [WordPressApi::class, 'getPostEditUrl'])
+            new Twig_SimpleFunction('get_post_edit_url', [WordPressApi::class, 'getPostEditUrl'])
         );
         $this->twig->addFunction(
-            new Twig_Function('get_post_id_for_job', [JobsPage::class, 'getPostIdForJob'])
+            new Twig_SimpleFunction('get_post_id_for_job', [JobsPage::class, 'getPostIdForJob'])
         );
     }
 

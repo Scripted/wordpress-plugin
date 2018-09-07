@@ -61,6 +61,10 @@
                 </tr>
             </tbody>
         </table>
+        {% else %}
+        <input type="hidden" value="{{ awsAccessKey }}" name="{{ awsAccessKeyInputName }}"/>
+        <input type="hidden" value="{{ awsAccessSecret }}" name="{{ awsAccessSecretInputName }}"/>
+        <input type="hidden" value="{{ awsPostPublishTopicArn }}" name="{{ awsPostPublishTopicArnInputName }}"/>
         {% endif %}
         <p class="submit">
             <input type="submit" value="Save Changes" class="button-primary" id="submit" name="submit">
