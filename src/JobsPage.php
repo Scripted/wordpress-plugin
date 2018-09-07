@@ -89,6 +89,7 @@ class JobsPage
     {
         wp_enqueue_style('thickbox');
         wp_enqueue_script('thickbox');
+        $options = [];
 
         try {
             $paged = WordPressApi::getInput('paged');
@@ -111,13 +112,13 @@ class JobsPage
                 $postIds = WordPressApi::getPostIdsByProjectIds($jobIds);
             }
 
-            return View::render('jobs', [
-                'paginatedJobs' => $result,
-                'postIds' => $postIds,
-            ]);
+            $options['paginatedJobs'] = $result;
+            $options['postIds'] = $postIds;
         } catch (AccessTokenIsUnauthorized $e) {
-            return View::render('jobs');
+            //
         }
+
+        return View::render('jobs', $options);
     }
 
     /**
