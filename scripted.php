@@ -47,11 +47,6 @@ register_deactivation_hook(
 add_action(
     'admin_menu',
     function () {
-        // // Testing out the post published webhook.
-        // array_map(function ($postId) {
-        //     $post = get_post($postId);
-        //     Scripted\JobTasks::sendPostPublishedEvent($post->ID, $post);
-        // }, [32, 85, 1]);
         add_menu_page(
             'Scripted Settings',
             'Scripted.com',
@@ -72,7 +67,6 @@ add_action(
 // Let's add our jobs menu to the admin navigation.
 add_action(
     'admin_menu',
-    // [Scripted\JobsPage::class, 'configure']
     function () {
         if (Scripted\Config::canConnectToPlatform()) {
             $currentJobPageSlug = add_submenu_page(
