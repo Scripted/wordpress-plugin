@@ -1,0 +1,13 @@
+<div class="wrap" role="container">
+    {% include 'partials/logo.html' %}
+    <h2>Jobs</h2>
+    {% if paginatedJobs %}
+    {% include 'jobs/pagination.html' with { 'paginatedJobs': paginatedJobs } %}
+    {% include 'jobs/list.html' with { 'jobs': paginatedJobs.data, 'postIds': postIds } %}
+    {% include 'jobs/pagination.html' with { 'paginatedJobs': paginatedJobs } %}
+    {% else %}
+    <div class="no-data">
+        <h3>No jobs to display.</h3>
+    </div>
+    {% endif %}
+</div>

@@ -1,0 +1,46 @@
+{% if jobs %}
+<table cellspacing="0" class="wp-list-table widefat sTable">
+    <thead>
+        <tr>
+            <th scope="col" width="50%"><span>Topic</span></th>
+            <th scope="col" width="10%"><span>State</span></th>
+            <th scope="col" width="15%"><span>Deadline</span></th>
+            <th scope="col" width="23%"></th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for job in jobs %}
+        <tr valign="top" class="scripted type-page status-publish hentry alternate">
+        <input type="hidden" id="project_{{ loop.index }}" value="{{ job.id }}">
+        <td>{{ job.topic | trim_quotes }}</td>
+        <td>{{ job.state | capitalize }}</td>
+        <td>{{ job.deadline_at  | date('F j') }}</td>
+        {% if job.state == 'accepted' %}
+        <td>
+            {% set ajaxPreviewUrl = get_job_ajax_preview_url(job) %}
+            {% set postId = get_post_id_for_job(job, postIds) %}
+            {% if postId %}
+                {% set editUrl = get_post_edit_url(postId) %}
+                <a id="edit_{{ job.id }}" href="{{ editUrl }}">Edit Post</a> |&nbsp;
+                <a id="refresh_{{ job.id }}" href="javascript:void(0);" onclick="Scripted.refreshProjectPost('{{ job.id }}', '{{ postId }}', this)">Refresh Post</a> |&nbsp;
+            {% else %}
+                <a id="create_{{ job.id }}" href="javascript:void(0);" onclick="Scripted.createProjectPost('{{ job.id }}', false, this)">Create Draft</a> |&nbsp;
+                <a id="post_{{ job.id }}" href="javascript:void(0);" onclick="Scripted.createProjectPost('{{ job.id }}', true, this)">Create Post</a> |&nbsp;
+            {% endif %}
+            {% if ajaxPreviewUrl%}
+            <a href="{{ ajaxPreviewUrl }}&{{ 'TB_iframe=1&width=850&height=500' | url_encode }}" class="thickbox" title="{{ job.topic | striptags }}">Preview</a>
+            {% endif %}
+        </td>
+        {% else %}
+        <td>&nbsp;</td>
+        {% endif %}
+        </tr>
+        {% endfor %}
+
+    </tbody>
+</table>
+{% else %}
+<div class="no-data">
+    <h3>No jobs to display.</h3>
+</div>
+{% endif %}
