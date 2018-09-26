@@ -5,7 +5,7 @@ Tags: writing, blog posts, twitter, tweet, hire blogger, hire writer, custom con
 Requires at least: 3.3
 Requires PHP: >=5.5
 Tested up to: 4.9.8
-Stable tag: 3.0.0
+Stable tag: 3.0.1
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 

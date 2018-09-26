@@ -5,7 +5,7 @@ Plugin Name: Scripted.com Writing Marketplace
 Plugin URI: https://wordpress.org/plugins/scripted-api
 Description: Get great writers and manage your Scripted account from WordPress!
 Author: Scripted.com
-Version: 3.0.0
+Version: 3.0.1
 Author URI: https://www.scripted.com
 */
 
