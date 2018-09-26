@@ -14,56 +14,56 @@ class SettingsPage
      *
      * @var string
      */
-    public const ACCESS_TOKEN_INPUT_NAME = '_scripted_access_token';
+    const ACCESS_TOKEN_INPUT_NAME = '_scripted_access_token';
 
     /**
      * Advanced settings input name.
      *
      * @var string
      */
-    public const ADVANCED_SETTINGS_INPUT_NAME = '_scripted_advanced_settings';
+    const ADVANCED_SETTINGS_INPUT_NAME = '_scripted_advanced_settings';
 
     /**
      * AWS access key form input name.
      *
      * @var string
      */
-    public const AWS_ACCESS_KEY_INPUT_NAME = '_scripted_aws_access_key';
+    const AWS_ACCESS_KEY_INPUT_NAME = '_scripted_aws_access_key';
 
     /**
      * AWS access secret form input name.
      *
      * @var string
      */
-    public const AWS_ACCESS_SECRET_INPUT_NAME = '_scripted_aws_access_secret';
+    const AWS_ACCESS_SECRET_INPUT_NAME = '_scripted_aws_access_secret';
 
     /**
      * AWS SNS topic arn form input name.
      *
      * @var string
      */
-    public const AWS_SNS_TOPIC_ARN_INPUT_NAME = '_scripted_aws_sns_topic_arn';
+    const AWS_SNS_TOPIC_ARN_INPUT_NAME = '_scripted_aws_sns_topic_arn';
 
     /**
      * Business id form input name.
      *
      * @var string
      */
-    public const BUSINESS_ID_INPUT_NAME = '_scripted_org_key';
+    const BUSINESS_ID_INPUT_NAME = '_scripted_org_key';
 
     /**
      * Settings menu slug, used to identify the menu in the admin.
      *
      * @var string
      */
-    public const SLUG = 'scripted_settings';
+    const SLUG = 'scripted_settings';
 
     /**
      * Action slug for form processing action.
      *
      * @var string
      */
-    public const UPDATE_ACTION = '_scripted_form_auth_settings';
+    const UPDATE_ACTION = '_scripted_form_auth_settings';
 
     /**
      * Renders settings page markup.

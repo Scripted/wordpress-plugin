@@ -14,7 +14,7 @@ class JobsPage
      *
      * @var string
      */
-    public const SLUG = 'scripted_jobs';
+    const SLUG = 'scripted_jobs';
 
     /**
      * Builds an ajax preview url for the given job.

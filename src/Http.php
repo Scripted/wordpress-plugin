@@ -17,7 +17,7 @@ class Http
      *
      * @var integer
      */
-    public const DEFAULT_CACHE_LENGTH_SECONDS = 600;
+    const DEFAULT_CACHE_LENGTH_SECONDS = 600;
 
 
     /**
@@ -25,14 +25,14 @@ class Http
      *
      * @var string
      */
-    public const GET = 'GET';
+    const GET = 'GET';
 
     /**
      * Http post verb.
      *
      * @var string
      */
-    public const POST = 'POST';
+    const POST = 'POST';
 
 
     /**

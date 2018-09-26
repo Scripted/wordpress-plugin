@@ -13,7 +13,7 @@ class Config
      *
      * @var string
      */
-    public const ACCESS_TOKEN_KEY = '_scripted_api_key';
+    const ACCESS_TOKEN_KEY = '_scripted_api_key';
 
     /**
      * WordPress option key that identifies where the aws access key will be
@@ -21,7 +21,7 @@ class Config
      *
      * @var string
      */
-    public const AWS_ACCESS_KEY_KEY = '_scripted_aws_access_key';
+    const AWS_ACCESS_KEY_KEY = '_scripted_aws_access_key';
 
     /**
      * WordPress option key that identifies where the aws access secret will be
@@ -29,7 +29,7 @@ class Config
      *
      * @var string
      */
-    public const AWS_ACCESS_SECRET_KEY = '_scripted_aws_access_secret';
+    const AWS_ACCESS_SECRET_KEY = '_scripted_aws_access_secret';
 
     /**
      * WordPress option key that identifies where the aws sns topic arn will be
@@ -37,21 +37,21 @@ class Config
      *
      * @var string
      */
-    public const AWS_SNS_TOPIC_ARN_KEY = '_scripted_aws_sns_topic_arn';
+    const AWS_SNS_TOPIC_ARN_KEY = '_scripted_aws_sns_topic_arn';
 
     /**
      * Base url for Scripted API.
      *
      * @var string
      */
-    public const BASE_API_URL = 'https://api.scripted.com';
+    const BASE_API_URL = 'https://api.scripted.com';
 
     /**
      * Base url for Scripted web app.
      *
      * @var string
      */
-    public const BASE_APP_URL = 'https://app.scripted.com';
+    const BASE_APP_URL = 'https://app.scripted.com';
 
     /**
      * WordPress option key that identifies where the business id will be
@@ -59,28 +59,28 @@ class Config
      *
      * @var string
      */
-    public const BUSINESS_ID_KEY = '_scripted_business_id';
+    const BUSINESS_ID_KEY = '_scripted_business_id';
 
     /**
      * WordPress cache group key used to isolate cache keys used by this plugin.
      *
      * @var string
      */
-    public const CACHE_GROUP = '_scripted_';
+    const CACHE_GROUP = '_scripted_';
 
     /**
      * Meta data key used to store project id on post.
      *
      * @var string
      */
-    public const PROJECT_ID_META_KEY = 'scripted_project_id';
+    const PROJECT_ID_META_KEY = 'scripted_project_id';
 
     /**
      * WordPress capability required to administer plugin.
      *
      * @var string
      */
-    public const REQUIRED_CAPABILITY = 'manage_options';
+    const REQUIRED_CAPABILITY = 'manage_options';
 
     /**
      * List of old keys from previous versions of the plugin.

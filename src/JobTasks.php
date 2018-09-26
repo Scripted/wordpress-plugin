@@ -19,28 +19,28 @@ class JobTasks
      *
      * @var string
      */
-    public const AJAX_CREATE_PROJECT_DRAFT = 'scripted_create_project_draft';
+    const AJAX_CREATE_PROJECT_DRAFT = 'scripted_create_project_draft';
 
     /**
      * Ajax event that triggers preview of finished job.
      *
      * @var string
      */
-    public const AJAX_FINISHED_JOB_PREVIEW = 'scripted_preview_finished_job';
+    const AJAX_FINISHED_JOB_PREVIEW = 'scripted_preview_finished_job';
 
     /**
      * Ajax event that triggers preview of finished job.
      *
      * @var string
      */
-    public const AJAX_REFRESH_PROJECT_POST = 'scripted_refresh_project_post';
+    const AJAX_REFRESH_PROJECT_POST = 'scripted_refresh_project_post';
 
     /**
      * Post published action.
      *
      * @var string
      */
-    public const POST_PUBLISHED_ACTION = 'publish_post';
+    const POST_PUBLISHED_ACTION = 'publish_post';
 
     /**
      * Attempts to fetch a given project from the Scripted API, then coerce the
