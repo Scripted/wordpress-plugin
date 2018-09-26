@@ -130,10 +130,11 @@ class JobsPage
     public static function renderAsyncJobManagementJavascript()
     {
         $options = [
-            'createProjectPostBaseUrl' => wp_nonce_url( admin_url('admin-ajax.php'), JobTasks::AJAX_CREATE_PROJECT_DRAFT).'&action='.JobTasks::AJAX_CREATE_PROJECT_DRAFT,
+            'createProjectPostBaseUrl' => wp_nonce_url(admin_url('admin-ajax.php?action='.JobTasks::AJAX_CREATE_PROJECT_DRAFT), JobTasks::AJAX_CREATE_PROJECT_DRAFT),
             'filterJobsBaseUrl' => admin_url('admin.php?page='.static::SLUG),
-            'refreshProjectPostBaseUrl' => wp_nonce_url(admin_url('admin-ajax.php'), JobTasks::AJAX_REFRESH_PROJECT_POST).'&action='.JobTasks::AJAX_REFRESH_PROJECT_POST,
+            'refreshProjectPostBaseUrl' => wp_nonce_url(admin_url('admin-ajax.php?action='.JobTasks::AJAX_REFRESH_PROJECT_POST), JobTasks::AJAX_REFRESH_PROJECT_POST),
         ];
+
         return View::render('jobs.async-job-management-js', $options);
     }
 }

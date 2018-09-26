@@ -12,7 +12,7 @@
                     window.location = data;
                 },
                 error: function (error) {
-                    var errorMessage = 'Failed to create project post: ' + error.statusCode + ' ' + error.statusText + ' "'+error.responseText+'"';
+                    var errorMessage = 'Failed to create project post: ' + error.status + ' ' + error.statusText + ' "'+error.responseText+'"';
                     Scripted.showErrorMessage(errorMessage);
                     link.text(originalText).attr('disabled', false);
                 }
@@ -30,7 +30,7 @@
                     window.location = data;
                 },
                 error: function (xhr, status, error) {
-                    var errorMessage = 'Failed to create project post: ' + error.statusCode + ' ' + error.statusText + ' "'+error.responseText+'"';
+                    var errorMessage = 'Failed to create project post: ' + error.status + ' ' + error.statusText + ' "'+error.responseText+'"';
                     Scripted.showErrorMessage(errorMessage);
                     link.text(originalText).attr('disabled', false);
                 }
